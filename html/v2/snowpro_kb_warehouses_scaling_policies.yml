@@ -1,0 +1,1082 @@
+Topic Name: Virtual Warehouses
+Sub Topic Name: Scaling Policies
+Total Question Count: 40
+
+all questions:
+
+  - Question No: "001"
+    question: "Which scaling policies are available for Multi-Cluster Virtual Warehouses in Snowflake?"
+    their options:
+      option A: "Standard and Economy"
+      option B: "Auto and Manual"
+      option C: "Conservative and Aggressive"
+      option D: "Standard and Aggressive"
+      option E: "Economy and Conservative"
+    correct Answer: "A"
+    explanation: >
+      Snowflake provides two scaling policies for Multi-Cluster Warehouses:
+      1. Standard – Prioritizes performance. Snowflake starts additional clusters as soon as there is demand,
+         minimizing query queuing. This is the default policy.
+      2. Economy – Prioritizes cost savings. Snowflake waits until there is enough load to justify spinning up
+         an additional cluster (typically 6 minutes of sustained load before adding and 6 minutes of idle before removing).
+      'Auto', 'Manual', 'Conservative', and 'Aggressive' are not valid Snowflake scaling policy names.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "002"
+    question: >
+      A data engineering team runs thousands of concurrent ETL queries every morning. The team's top priority
+      is to ensure zero query queuing and maximum throughput. Which scaling policy should they configure?
+    their options:
+      option A: "Economy"
+      option B: "Standard"
+      option C: "Auto-Scale"
+      option D: "Conservative"
+      option E: "Manual"
+    correct Answer: "B"
+    explanation: >
+      The Standard scaling policy prioritizes performance over cost. It starts additional clusters immediately
+      when there is any queuing detected, ensuring minimal wait time. This is the correct choice when the
+      business requirement is maximum throughput and zero queue time. Economy policy would wait for sustained
+      load before spinning up new clusters, causing temporary queuing.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "003"
+    question: >
+      Your organization wants to reduce Snowflake compute costs during off-peak hours. The workload is
+      non-time-sensitive and can tolerate some query queuing. Which scaling policy is most appropriate?
+    their options:
+      option A: "Standard"
+      option B: "Manual"
+      option C: "Economy"
+      option D: "Aggressive"
+      option E: "Performance"
+    correct Answer: "C"
+    explanation: >
+      The Economy scaling policy is designed to reduce costs by being conservative about when additional clusters
+      are started. It waits until there is enough sustained query load before spinning up new clusters, which
+      means some queries may queue briefly. This is ideal for workloads that are cost-sensitive and can tolerate
+      some latency. Standard policy would start new clusters aggressively, increasing costs unnecessarily for
+      non-time-sensitive workloads.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "004"
+    question: >
+      Which of the following statements about Multi-Cluster Warehouse scaling policies are TRUE?
+      (Select TWO)
+    their options:
+      option A: "Standard policy starts new clusters as soon as queuing is detected"
+      option B: "Economy policy starts new clusters immediately to avoid any queuing"
+      option C: "Economy policy conserves credits by waiting for sustained load before scaling out"
+      option D: "Standard policy reduces costs by delaying cluster startup"
+      option E: "Both policies have the same cluster startup behavior"
+    correct Answer: "A, C"
+    explanation: >
+      A is TRUE: Standard policy is performance-first — it immediately starts additional clusters when queries
+      begin queuing, preventing any meaningful wait time.
+      C is TRUE: Economy policy is cost-first — it waits until there is enough sustained load (typically filling
+      at least one more cluster for ~6 minutes) before starting additional clusters, thus conserving credits.
+      B is FALSE: That describes Standard, not Economy.
+      D is FALSE: Standard policy does not delay startup; it scales aggressively.
+      E is FALSE: The two policies have distinctly different cluster startup and shutdown behaviors.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "005"
+    question: >
+      Consider the following DDL statement:
+      
+        CREATE WAREHOUSE my_wh
+          WAREHOUSE_SIZE = 'LARGE'
+          MIN_CLUSTER_COUNT = 1
+          MAX_CLUSTER_COUNT = 5
+          SCALING_POLICY = ECONOMY;
+      
+      What is the expected behavior of this warehouse when a sudden burst of 1000 concurrent queries arrives?
+    their options:
+      option A: "All 5 clusters start immediately to handle the load"
+      option B: "Queries are queued until the Economy policy determines sustained load justifies adding clusters"
+      option C: "The warehouse throws an error because Economy policy requires MIN_CLUSTER_COUNT >= 2"
+      option D: "Only 1 cluster runs permanently and Economy policy has no effect on single-cluster warehouses"
+      option E: "Snowflake automatically changes the policy to Standard during high concurrency"
+    correct Answer: "B"
+    explanation: >
+      With SCALING_POLICY = ECONOMY, Snowflake waits to confirm sustained demand before spinning up new clusters.
+      A sudden burst will cause initial queuing while Snowflake evaluates load. Once the policy determines there
+      is enough sustained work (typically ~6 minutes of high demand), it will start additional clusters up to
+      MAX_CLUSTER_COUNT = 5 one at a time. There is no requirement for MIN_CLUSTER_COUNT >= 2 with Economy policy.
+      Single-cluster behavior (MIN=MAX=1) disables multi-cluster entirely, but here MIN=1 and MAX=5 means
+      multi-cluster is active and Economy policy governs scale-out behavior.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer,Architect
+
+  - Question No: "006"
+    question: >
+      Which of the following ALTER WAREHOUSE statements correctly changes the scaling policy of an existing
+      Multi-Cluster Warehouse to Standard?
+    their options:
+      option A: "ALTER WAREHOUSE my_wh SET SCALING_POLICY = 'STANDARD';"
+      option B: "ALTER WAREHOUSE my_wh MODIFY SCALING_POLICY = STANDARD;"
+      option C: "ALTER WAREHOUSE my_wh SET SCALING_POLICY = STANDARD;"
+      option D: "UPDATE WAREHOUSE my_wh SET SCALING_POLICY = STANDARD;"
+      option E: "ALTER WAREHOUSE my_wh SCALING_POLICY STANDARD;"
+    correct Answer: "C"
+    explanation: >
+      The correct syntax to modify a warehouse property in Snowflake is:
+        ALTER WAREHOUSE <name> SET <property> = <value>;
+      The SCALING_POLICY value (STANDARD or ECONOMY) does not need to be quoted — it is a keyword, not a string.
+      Option A uses single quotes around STANDARD which is incorrect syntax.
+      Option B uses MODIFY which is not valid Snowflake DDL for warehouse properties.
+      Option D uses UPDATE which is DML and not applicable to warehouse configuration.
+      Option E is missing the SET keyword and the equals sign.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "007"
+    question: >
+      What is the DEFAULT scaling policy when a Multi-Cluster Virtual Warehouse is created without
+      explicitly specifying a SCALING_POLICY?
+    their options:
+      option A: "Economy"
+      option B: "Manual"
+      option C: "Standard"
+      option D: "Auto"
+      option E: "Conservative"
+    correct Answer: "C"
+    explanation: >
+      When you create a Multi-Cluster Warehouse without specifying a SCALING_POLICY, Snowflake defaults to
+      the Standard policy. Standard prioritizes performance by starting additional clusters as soon as
+      queuing is detected. You must explicitly set SCALING_POLICY = ECONOMY if you want cost-optimized
+      scaling behavior. This default reflects Snowflake's emphasis on performance out-of-the-box.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "008"
+    question: >
+      A Snowflake architect is designing a warehouse for a BI dashboard used by 500 concurrent analysts.
+      The dashboards must refresh in under 5 seconds. Which combination of settings is MOST appropriate?
+    their options:
+      option A: "SCALING_POLICY = ECONOMY, MAX_CLUSTER_COUNT = 10"
+      option B: "SCALING_POLICY = STANDARD, MAX_CLUSTER_COUNT = 1"
+      option C: "SCALING_POLICY = STANDARD, MAX_CLUSTER_COUNT = 10"
+      option D: "SCALING_POLICY = ECONOMY, MAX_CLUSTER_COUNT = 1"
+      option E: "SCALING_POLICY = STANDARD, MIN_CLUSTER_COUNT = MAX_CLUSTER_COUNT = 10"
+    correct Answer: "C"
+    explanation: >
+      For 500 concurrent analysts with a strict <5 second SLA:
+      - SCALING_POLICY = STANDARD ensures new clusters start immediately when queuing is detected,
+        preventing any meaningful delay.
+      - MAX_CLUSTER_COUNT = 10 provides enough headroom for the concurrent load.
+      Option A (Economy) would allow queuing which violates the 5-second SLA.
+      Option B (MAX=1) disables multi-cluster scaling entirely — all queries compete on one cluster.
+      Option D combines the two worst choices for this use case.
+      Option E (MIN=MAX=10) keeps all 10 clusters running permanently which is costly and unnecessary
+      when load is variable; it also means no dynamic scaling occurs.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, Architect, DataEngineer
+
+  - Question No: "009"
+    question: >
+      Which Snowflake view or table can you query to monitor how many clusters were active in a
+      Multi-Cluster Warehouse over time?
+    their options:
+      option A: "INFORMATION_SCHEMA.WAREHOUSE_EVENTS_HISTORY"
+      option B: "ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY"
+      option C: "SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY"
+      option D: "INFORMATION_SCHEMA.WAREHOUSE_LOAD_HISTORY"
+      option E: "ACCOUNT_USAGE.CLUSTER_HISTORY"
+    correct Answer: "B"
+    explanation: >
+      ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY contains columns including CLUSTER_COUNT which shows
+      how many clusters were active for a given warehouse at a given time. This helps you analyze
+      scaling behavior, understand peak concurrency, and optimize your MIN/MAX cluster count settings.
+      WAREHOUSE_LOAD_HISTORY (D) shows queue and execution stats but not cluster count directly.
+      WAREHOUSE_EVENTS_HISTORY (A) does not exist as a standard Snowflake view.
+      QUERY_HISTORY (C) shows individual query details.
+      CLUSTER_HISTORY (E) does not exist as a standard view.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer,Architect
+
+  - Question No: "010"
+    question: >
+      Scaling policies in Snowflake apply ONLY to which type of virtual warehouse?
+    their options:
+      option A: "Single-Cluster Warehouses"
+      option B: "Multi-Cluster Warehouses"
+      option C: "Snowpark-Optimized Warehouses"
+      option D: "All warehouse types including X-Small"
+      option E: "Only warehouses of size LARGE and above"
+    correct Answer: "B"
+    explanation: >
+      Scaling policies (Standard and Economy) only apply to Multi-Cluster Warehouses — warehouses
+      where MIN_CLUSTER_COUNT < MAX_CLUSTER_COUNT. When a warehouse has MIN_CLUSTER_COUNT = MAX_CLUSTER_COUNT = 1
+      (single-cluster), there is no dynamic scaling and the policy setting is irrelevant.
+      Scaling policies are not related to warehouse size (X-Small, Small, etc.) or warehouse type
+      (standard vs. Snowpark-optimized). The policy controls HOW MANY clusters to run, not the
+      size of each cluster.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "011"
+    question: >
+      In a Multi-Cluster Warehouse with SCALING_POLICY = STANDARD, what triggers the scale-out
+      (addition of a new cluster)?
+    their options:
+      option A: "CPU utilization exceeds 80% on the primary cluster"
+      option B: "A query has been queued for more than 60 seconds"
+      option C: "Queries are detected waiting in the queue (any queuing detected)"
+      option D: "At least 10 concurrent queries are running simultaneously"
+      option E: "The warehouse has been running for more than 1 hour"
+    correct Answer: "C"
+    explanation: >
+      With the Standard scaling policy, Snowflake starts a new cluster as soon as any queuing is
+      detected — meaning the moment a query cannot immediately begin execution because existing
+      clusters are at capacity. There is no CPU threshold, time threshold, or minimum query count
+      involved. The goal is to eliminate queuing as fast as possible.
+      For Economy policy, Snowflake instead waits to confirm enough sustained load before starting
+      a new cluster, which may result in brief queuing.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "012"
+    question: >
+      Which statement BEST describes the scale-in (cluster shutdown) behavior under the Economy
+      scaling policy?
+    their options:
+      option A: "A cluster is shut down immediately when it has no running queries"
+      option B: "A cluster is shut down after being idle for approximately 2-3 minutes"
+      option C: "A cluster is shut down only after all clusters are idle for 10 minutes"
+      option D: "A cluster is kept idle for longer before shutdown compared to Standard policy"
+      option E: "Economy policy never shuts down clusters once started"
+    correct Answer: "D"
+    explanation: >
+      Under the Economy scaling policy, Snowflake is more conservative about shutting down idle clusters —
+      meaning clusters remain running (idle) longer before Snowflake decides to shut them down. This might
+      seem counterintuitive for a "cost-saving" policy, but the idea is to avoid the repeated startup cost
+      of constantly spinning clusters up and down. The Economy policy makes fewer scaling decisions overall.
+      In contrast, Standard policy shuts down idle clusters more aggressively because it's designed to
+      react quickly in both directions.
+      Neither policy shuts clusters down immediately or keeps them forever. Exact idle thresholds are
+      managed internally by Snowflake.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "013"
+    question: >
+      A data team notices their Economy policy Multi-Cluster Warehouse has 4 active clusters at 9 AM
+      but drops to 1 cluster by 9:05 AM as load decreases. Is this behavior expected?
+    their options:
+      option A: "No — Economy policy never scales in that quickly"
+      option B: "Yes — Economy policy scales in (removes clusters) more aggressively than Standard when load drops"
+      option C: "No — Economy policy should maintain all 4 clusters until manual intervention"
+      option D: "Yes — This is identical behavior to Standard policy scale-in"
+      option E: "No — Clusters once started can never be removed until the warehouse is suspended"
+    correct Answer: "A"
+    explanation: >
+      This behavior is NOT expected under Economy policy. The Economy policy is characterized by being
+      MORE CONSERVATIVE about scaling decisions — it waits longer before adding clusters and also
+      keeps clusters running longer before removing them. If 4 clusters dropped to 1 in just 5 minutes,
+      that would be more consistent with aggressive scale-in behavior, which goes against Economy policy's
+      design. Under Economy, you'd expect the extra clusters to remain active longer even as load starts
+      to decrease, to avoid the overhead of constant start/stop cycles. If this behavior was observed,
+      it might indicate the load truly dropped dramatically or there is a misconfiguration.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Architect, DataEngineer
+
+  - Question No: "014"
+    question: >
+      Which of the following CREATE WAREHOUSE statements will result in a Multi-Cluster Warehouse
+      with Economy scaling policy? (Select TWO)
+    their options:
+      option A: "CREATE WAREHOUSE wh1 WAREHOUSE_SIZE='MEDIUM' MIN_CLUSTER_COUNT=1 MAX_CLUSTER_COUNT=3 SCALING_POLICY=ECONOMY;"
+      option B: "CREATE WAREHOUSE wh2 WAREHOUSE_SIZE='LARGE' SCALING_POLICY=ECONOMY;"
+      option C: "CREATE WAREHOUSE wh3 MIN_CLUSTER_COUNT=2 MAX_CLUSTER_COUNT=2 SCALING_POLICY=ECONOMY;"
+      option D: "CREATE WAREHOUSE wh4 MIN_CLUSTER_COUNT=1 MAX_CLUSTER_COUNT=5 SCALING_POLICY=ECONOMY;"
+      option E: "CREATE WAREHOUSE wh5 MIN_CLUSTER_COUNT=1 MAX_CLUSTER_COUNT=1 SCALING_POLICY=ECONOMY;"
+    correct Answer: "A, D"
+    explanation: >
+      A Multi-Cluster Warehouse requires MIN_CLUSTER_COUNT < MAX_CLUSTER_COUNT.
+      A: MIN=1, MAX=3 → Multi-cluster ✓ + ECONOMY ✓ — VALID
+      D: MIN=1, MAX=5 → Multi-cluster ✓ + ECONOMY ✓ — VALID
+      B: No MIN/MAX specified, defaults to MIN=MAX=1 → Single-cluster, Economy policy has no effect.
+      C: MIN=MAX=2 → Fixed 2 clusters always running, but not dynamically scaling. Not true multi-cluster scaling.
+         (Note: This creates a fixed multi-cluster warehouse, not a scalable one.)
+      E: MIN=MAX=1 → Single-cluster, Economy policy is irrelevant.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "015"
+    question: >
+      What happens to queries that are queued when a new cluster starts in a Standard policy
+      Multi-Cluster Warehouse?
+    their options:
+      option A: "Queued queries are cancelled and must be resubmitted"
+      option B: "Queued queries are redistributed and executed on the newly started cluster"
+      option C: "Queued queries remain queued until the original cluster has free capacity"
+      option D: "Queued queries are cached and returned from the result cache"
+      option E: "Only the oldest queued query moves to the new cluster; others remain queued"
+    correct Answer: "B"
+    explanation: >
+      When a new cluster starts in a Multi-Cluster Warehouse, Snowflake automatically routes queued
+      queries to the newly available cluster. This is the fundamental value of multi-cluster scaling —
+      queued work is distributed and begins execution on the new cluster without requiring user
+      intervention or query resubmission. Queries are never cancelled due to scaling events.
+      This redistribution is seamless and transparent to the user/application.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "016"
+    question: >
+      A SnowPro architect reviews the following warehouse configuration:
+      
+        MIN_CLUSTER_COUNT = 3
+        MAX_CLUSTER_COUNT = 3
+        SCALING_POLICY = STANDARD
+      
+      What is the effective behavior of this warehouse?
+    their options:
+      option A: "Warehouse scales between 1 and 3 clusters using Standard policy"
+      option B: "Warehouse always runs exactly 3 clusters; scaling policy has no effect"
+      option C: "Warehouse defaults to Economy policy since MIN equals MAX"
+      option D: "Snowflake raises an error because MIN must be less than MAX"
+      option E: "Warehouse starts with 3 clusters and scales down to 1 during idle periods"
+    correct Answer: "B"
+    explanation: >
+      When MIN_CLUSTER_COUNT = MAX_CLUSTER_COUNT, the warehouse runs a FIXED number of clusters (3 in this case)
+      at all times — it will not scale up or down dynamically. The SCALING_POLICY setting is irrelevant
+      because there is no dynamic scaling to govern. All 3 clusters run permanently (while the warehouse
+      is not suspended). This is a valid and sometimes intentional configuration when you always want
+      guaranteed compute capacity. Snowflake does NOT raise an error for MIN=MAX configurations.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "017"
+    question: >
+      Which Snowflake feature, when combined with Multi-Cluster Warehouse scaling policies, helps
+      ensure that similar repeated queries do not consume additional warehouse credits?
+    their options:
+      option A: "Auto-suspend"
+      option B: "Result Cache (Query Result Cache)"
+      option C: "Materialized Views"
+      option D: "Query Acceleration Service"
+      option E: "Warehouse Scaling Policy"
+    correct Answer: "B"
+    explanation: >
+      Snowflake's Query Result Cache stores the results of previously executed queries for 24 hours.
+      If the same query is executed again (with no underlying data changes), Snowflake returns the
+      result from cache without using any warehouse compute. This directly reduces the load on the
+      warehouse and can reduce the need for additional clusters to scale out, complementing the
+      scaling policy configuration. Materialized Views (C) precompute query results but still consume
+      credits for maintenance. Query Acceleration Service (D) speeds up individual large queries
+      but doesn't eliminate compute usage.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "018"
+    question: >
+      In a scenario where a company has two workloads:
+        - Workload A: Overnight batch ETL (cost-sensitive, runs 2-4 AM)
+        - Workload B: Real-time executive dashboards (SLA: < 3 sec, runs 8 AM–6 PM)
+      
+      What is the BEST warehouse strategy?
+    their options:
+      option A: "One shared warehouse with Standard policy for both workloads"
+      option B: "One shared warehouse with Economy policy for both workloads"
+      option C: "Two separate warehouses: Economy for Workload A, Standard for Workload B"
+      option D: "Two separate warehouses: Standard for both workloads"
+      option E: "One warehouse that switches policy at 4 AM automatically"
+    correct Answer: "C"
+    explanation: >
+      This is a classic multi-warehouse design pattern:
+      - Workload A (batch ETL, cost-sensitive): Use Economy policy to minimize credit consumption.
+        Some queuing is acceptable during 2–4 AM when no humans are waiting.
+      - Workload B (executive dashboards, strict SLA): Use Standard policy to immediately spin up
+        additional clusters when concurrency spikes, ensuring sub-3-second response times.
+      Combining workloads (A, B) creates resource contention. Using Standard for both (D) wastes
+      credits on the batch workload. Policies cannot auto-switch on a schedule (E) — this would
+      require manual ALTER WAREHOUSE commands or automation scripts.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, Architect, DataEngineer
+
+  - Question No: "019"
+    question: >
+      What does the SHOW WAREHOUSES command display about scaling policies?
+    their options:
+      option A: "It does not display scaling policy information"
+      option B: "It shows the SCALING_POLICY column with the current policy (STANDARD or ECONOMY)"
+      option C: "It shows scaling policy only for suspended warehouses"
+      option D: "It shows scaling history for the past 24 hours"
+      option E: "It shows scaling policy only if the warehouse has more than 1 cluster running"
+    correct Answer: "B"
+    explanation: >
+      The SHOW WAREHOUSES command returns a result set with multiple columns including SCALING_POLICY,
+      which displays the current scaling policy (STANDARD or ECONOMY) for each warehouse. It also
+      shows MIN_CLUSTER_COUNT, MAX_CLUSTER_COUNT, CLUSTER_COUNT (current active clusters), and other
+      warehouse properties. This is always available regardless of warehouse state (running, suspended).
+      You can also query INFORMATION_SCHEMA.WAREHOUSES for similar information programmatically.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "020"
+    question: >
+      A junior developer writes this query to check the current scaling policy of a warehouse:
+      
+        SELECT SCALING_POLICY 
+        FROM INFORMATION_SCHEMA.WAREHOUSES 
+        WHERE WAREHOUSE_NAME = 'MY_WH';
+      
+      Is this query correct?
+    their options:
+      option A: "Yes, this is the correct way to query warehouse scaling policy"
+      option B: "No — the correct view is ACCOUNT_USAGE.WAREHOUSES, not INFORMATION_SCHEMA.WAREHOUSES"
+      option C: "No — INFORMATION_SCHEMA does not have a WAREHOUSES view; use SHOW WAREHOUSES instead"
+      option D: "No — the column name is SCALE_POLICY not SCALING_POLICY"
+      option E: "Yes, but only ACCOUNTADMIN role can run this query"
+    correct Answer: "A"
+    explanation: >
+      INFORMATION_SCHEMA.WAREHOUSES is a valid Snowflake view that contains warehouse configuration details
+      including SCALING_POLICY, MIN_CLUSTER_COUNT, MAX_CLUSTER_COUNT, and other properties. The query
+      syntax shown is correct. ACCOUNT_USAGE.WAREHOUSES also exists and provides historical data, while
+      INFORMATION_SCHEMA.WAREHOUSES provides current configuration. The column is named SCALING_POLICY (not
+      SCALE_POLICY). Access to INFORMATION_SCHEMA views requires appropriate privileges but not necessarily
+      ACCOUNTADMIN — any user with USAGE on the warehouse can typically view its metadata.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "021"
+    question: >
+      Which of the following are TRUE differences between Standard and Economy scaling policies?
+      (Select THREE)
+    their options:
+      option A: "Standard starts new clusters faster than Economy when queuing is detected"
+      option B: "Economy is more conservative about starting new clusters"
+      option C: "Standard policy costs more credits when load is variable and unpredictable"
+      option D: "Economy policy always results in lower total credit consumption than Standard"
+      option E: "Standard policy shuts down idle clusters more quickly than Economy"
+    correct Answer: "A, B, E"
+    explanation: >
+      A is TRUE: Standard reacts immediately to any queuing by starting a new cluster, while Economy
+         waits for confirmed sustained load.
+      B is TRUE: Economy is intentionally conservative — it waits before scaling out to avoid
+         unnecessary cluster starts.
+      E is TRUE: Standard policy shuts down idle clusters more aggressively (quicker), whereas Economy
+         keeps idle clusters running longer to avoid frequent start/stop cycles.
+      C is PARTIALLY TRUE but misleading — Standard CAN cost more if load spikes frequently, but it
+         also provides better performance. However, 'costs more' is not guaranteed — it depends on load pattern.
+      D is FALSE: Economy doesn't ALWAYS result in lower costs. In some workload patterns (steady high
+         concurrency), Economy and Standard might have similar credit consumption. Economy can actually
+         keep clusters running longer (slower scale-in), potentially costing more in some scenarios.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "022"
+    question: >
+      A company's Multi-Cluster Warehouse has the following configuration:
+      
+        MIN_CLUSTER_COUNT = 1
+        MAX_CLUSTER_COUNT = 10
+        SCALING_POLICY = ECONOMY
+        AUTO_SUSPEND = 300
+      
+      During a sudden spike, 800 users submit queries simultaneously. Under Economy policy, what
+      is the INITIAL behavior?
+    their options:
+      option A: "All 10 clusters start immediately to handle 800 users"
+      option B: "Queries queue while Economy policy evaluates whether the load justifies adding clusters"
+      option C: "The warehouse auto-suspends because AUTO_SUSPEND = 300 takes priority"
+      option D: "800 queries execute in parallel on the single starting cluster without queuing"
+      option E: "Snowflake raises a 'too many concurrent queries' error"
+    correct Answer: "B"
+    explanation: >
+      Under Economy policy, even during a large sudden spike, Snowflake does not immediately start all
+      available clusters. Instead, it evaluates the load pattern to confirm it is sustained before
+      committing to starting new clusters. This means:
+      1. Initial queries begin executing on the minimum 1 cluster.
+      2. Additional queries queue.
+      3. After sustained load is confirmed (~6 minutes worth of demand), Economy policy begins
+         adding clusters one at a time.
+      AUTO_SUSPEND = 300 means the warehouse suspends after 300 seconds (5 minutes) of inactivity —
+      this only applies when there are NO queries, so it doesn't interfere with active load handling.
+      Snowflake has no 'too many concurrent queries' error — it queues excess queries instead.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Architect, DataEngineer
+
+  - Question No: "023"
+    question: >
+      Which role is required to CREATE or ALTER a Multi-Cluster Warehouse and set its scaling policy?
+    their options:
+      option A: "Only SYSADMIN"
+      option B: "Only ACCOUNTADMIN"
+      option C: "Any role with CREATE WAREHOUSE privilege or OWNERSHIP/MODIFY on the warehouse"
+      option D: "Only SECURITYADMIN"
+      option E: "Any role — warehouse management requires no special privileges"
+    correct Answer: "C"
+    explanation: >
+      In Snowflake's privilege model:
+      - To CREATE a warehouse, a role needs the CREATE WAREHOUSE privilege (granted at account level, 
+        typically by ACCOUNTADMIN or SYSADMIN to other roles).
+      - To ALTER an existing warehouse (including changing scaling policy), a role needs MODIFY privilege
+        on the warehouse, or OWNERSHIP of the warehouse.
+      SYSADMIN typically has CREATE WAREHOUSE by default in standard setups, but it's not the ONLY
+      role that can do this. The privilege can be granted to custom roles following least-privilege principles.
+      ACCOUNTADMIN can do everything but is not the only role with this capability.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "024"
+    question: >
+      What is the relationship between warehouse AUTO_SUSPEND and multi-cluster scaling policies?
+    their options:
+      option A: "AUTO_SUSPEND suspends individual idle clusters; scaling policy controls new cluster startup"
+      option B: "AUTO_SUSPEND applies to the entire warehouse (suspends all clusters); scaling policy controls dynamic cluster count"
+      option C: "AUTO_SUSPEND and scaling policy are the same feature with different names"
+      option D: "Scaling policy overrides AUTO_SUSPEND when more than 2 clusters are active"
+      option E: "AUTO_SUSPEND only applies to single-cluster warehouses; scaling policy handles multi-cluster suspension"
+    correct Answer: "B"
+    explanation: >
+      These are two distinct but complementary warehouse features:
+      - SCALING_POLICY governs how dynamically the number of active clusters changes in response to load
+        (Standard: react immediately, Economy: wait for sustained load). This operates while the warehouse
+        is running and has work to do.
+      - AUTO_SUSPEND applies to the entire warehouse — when the warehouse (all clusters) has been idle
+        for the specified number of seconds, Snowflake suspends the whole warehouse (all clusters shut down).
+        This is about saving costs when there is NO work at all.
+      They work independently: scaling policy manages cluster count during active periods, auto-suspend
+      manages the transition between active and suspended states.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "025"
+    question: >
+      A Snowflake administrator wants to verify whether a warehouse named 'ANALYTICS_WH' is currently
+      running with Economy or Standard policy, and how many clusters are currently active. Which query
+      achieves this in a single statement?
+    their options:
+      option A: |
+        SELECT SCALING_POLICY, CLUSTER_COUNT 
+        FROM TABLE(INFORMATION_SCHEMA.WAREHOUSE_LOAD_HISTORY(DATEADD('hours',-1,CURRENT_TIMESTAMP()), CURRENT_TIMESTAMP()))
+        WHERE WAREHOUSE_NAME = 'ANALYTICS_WH';
+      option B: |
+        SELECT SCALING_POLICY, CLUSTER_COUNT 
+        FROM INFORMATION_SCHEMA.WAREHOUSES 
+        WHERE NAME = 'ANALYTICS_WH';
+      option C: |
+        SHOW WAREHOUSES LIKE 'ANALYTICS_WH';
+      option D: |
+        SELECT * FROM ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY 
+        WHERE WAREHOUSE_NAME = 'ANALYTICS_WH' 
+        ORDER BY START_TIME DESC LIMIT 1;
+      option E: "Both B and C are correct"
+    correct Answer: "E"
+    explanation: >
+      Both B and C retrieve the current scaling policy and cluster count:
+      
+      Option B queries INFORMATION_SCHEMA.WAREHOUSES which has columns NAME, SCALING_POLICY,
+      CLUSTER_COUNT, MIN_CLUSTER_COUNT, MAX_CLUSTER_COUNT, and more — a direct SQL query returning
+      current configuration.
+      
+      Option C uses SHOW WAREHOUSES LIKE 'ANALYTICS_WH' which returns the same configuration details
+      including scaling_policy and cluster_count columns in its result set.
+      
+      Option A queries WAREHOUSE_LOAD_HISTORY which contains queue/execution stats, not scaling policy.
+      Option D queries WAREHOUSE_METERING_HISTORY which shows historical credit usage and cluster counts
+      over time, not the current configuration or policy name.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "026"
+    question: >
+      Snowflake credits are charged based on the number of running clusters multiplied by the warehouse size.
+      If a LARGE warehouse (4 credits/hour per cluster) runs with 3 clusters for 30 minutes under Standard
+      policy, how many credits are consumed?
+    their options:
+      option A: "4 credits"
+      option B: "6 credits"
+      option C: "12 credits"
+      option D: "2 credits"
+      option E: "8 credits"
+    correct Answer: "B"
+    explanation: >
+      Credit calculation for Multi-Cluster Warehouses:
+      - LARGE warehouse = 4 credits per hour per cluster
+      - 3 clusters running = 4 × 3 = 12 credits per hour
+      - Running for 30 minutes = 30/60 = 0.5 hours
+      - Total = 12 × 0.5 = 6 credits
+      
+      This illustrates why scaling policy matters: Economy policy might have only started 1-2 clusters
+      for this duration if load was borderline, saving 4-8 credits in this period. Standard policy
+      ensures all necessary clusters are running but at full cost.
+      Scaling policies don't change HOW credits are calculated — they control WHEN clusters are started
+      and stopped, which affects total credit consumption.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "027"
+    question: >
+      A Multi-Cluster Warehouse with Standard policy currently has 4 running clusters. Query load
+      drops significantly and all clusters become idle. What happens next?
+    their options:
+      option A: "All 4 clusters immediately shut down to 0 (warehouse auto-suspends)"
+      option B: "Clusters scale down to MIN_CLUSTER_COUNT; remaining clusters suspend after AUTO_SUSPEND timeout"
+      option C: "All clusters except 1 shut down immediately; the last cluster continues indefinitely"
+      option D: "Standard policy keeps all 4 clusters running until manually reduced"
+      option E: "Snowflake reduces to 2 clusters first, then to 1 after a second idle period"
+    correct Answer: "B"
+    explanation: >
+      When load drops in a Multi-Cluster Warehouse:
+      1. Snowflake first scales IN — removing extra clusters down to the MIN_CLUSTER_COUNT. The speed
+         of this scale-in depends on the scaling policy (Standard scales in more aggressively than Economy).
+      2. Once at MIN_CLUSTER_COUNT, the remaining cluster(s) continue running.
+      3. If those remaining clusters are also idle for the AUTO_SUSPEND duration (e.g., 300 seconds),
+         Snowflake suspends the entire warehouse.
+      This two-phase behavior (scale-in to MIN, then auto-suspend) is important to understand.
+      Clusters do not instantly drop to 0 — MIN_CLUSTER_COUNT acts as a floor.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "028"
+    question: >
+      Which of the following scenarios would benefit MOST from switching from Standard to Economy
+      scaling policy?
+    their options:
+      option A: "A trading platform running time-sensitive queries during market hours"
+      option B: "An overnight data loading job where batch duration is not business-critical"
+      option C: "A customer-facing application with SLA of < 2 second query response"
+      option D: "A real-time fraud detection system processing transactions continuously"
+      option E: "An executive reporting dashboard used during board meetings"
+    correct Answer: "B"
+    explanation: >
+      Economy policy is best for workloads where:
+      - Cost savings are more important than immediate performance
+      - Some query queuing is acceptable
+      - Workloads run during off-peak hours when no humans are waiting for results
+      
+      An overnight data loading batch (B) perfectly fits this profile: it runs when no one is watching,
+      can tolerate queuing, and completing in 4 hours vs 3 hours doesn't impact the business.
+      
+      All other options (trading, customer-facing, fraud detection, board meetings) have strict latency
+      requirements where queuing from Economy policy could cause business harm or SLA violations.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "029"
+    question: >
+      What is the maximum number of clusters allowed in a Snowflake Multi-Cluster Warehouse?
+    their options:
+      option A: "5"
+      option B: "10"
+      option C: "25"
+      option D: "50"
+      option E: "Unlimited, based on account needs"
+    correct Answer: "B"
+    explanation: >
+      Snowflake supports a maximum of 10 clusters in a Multi-Cluster Warehouse (MAX_CLUSTER_COUNT = 10).
+      This applies to all editions that support multi-cluster warehouses (Enterprise and above).
+      If your workload requires more than 10 clusters' worth of concurrency, you would need to consider
+      other architectural approaches such as workload separation across multiple warehouses, query optimization,
+      or use of the Query Acceleration Service for large query outliers.
+      Note: Multi-Cluster Warehouses are only available on Enterprise Edition and higher.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "030"
+    question: >
+      On which Snowflake edition(s) is the Multi-Cluster Warehouse feature (and therefore scaling
+      policies) available?
+    their options:
+      option A: "Standard Edition and above"
+      option B: "Business Critical Edition only"
+      option C: "Enterprise Edition and above (Enterprise, Business Critical, Virtual Private Snowflake)"
+      option D: "All editions including free trial accounts"
+      option E: "Team Edition and above"
+    correct Answer: "C"
+    explanation: >
+      Multi-Cluster Warehouses are available on Enterprise Edition and higher tiers:
+      - Enterprise Edition
+      - Business Critical Edition
+      - Virtual Private Snowflake (VPS)
+      
+      Standard Edition supports only single-cluster warehouses. Since scaling policies only apply to
+      Multi-Cluster Warehouses, they are also only relevant on Enterprise Edition and above.
+      This is an important architectural consideration — if a customer is on Standard Edition and needs
+      concurrency scaling, they must either upgrade or use a different approach (multiple separate warehouses).
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "031"
+    question: >
+      A developer runs the following commands in sequence:
+      
+        CREATE WAREHOUSE test_wh
+          MIN_CLUSTER_COUNT = 1
+          MAX_CLUSTER_COUNT = 4
+          SCALING_POLICY = STANDARD;
+        
+        ALTER WAREHOUSE test_wh SET SCALING_POLICY = ECONOMY;
+        ALTER WAREHOUSE test_wh SET MAX_CLUSTER_COUNT = 6;
+      
+      What is the final state of test_wh's scaling configuration?
+    their options:
+      option A: "SCALING_POLICY = STANDARD, MAX_CLUSTER_COUNT = 4"
+      option B: "SCALING_POLICY = ECONOMY, MAX_CLUSTER_COUNT = 6"
+      option C: "SCALING_POLICY = ECONOMY, MAX_CLUSTER_COUNT = 4"
+      option D: "SCALING_POLICY = STANDARD, MAX_CLUSTER_COUNT = 6"
+      option E: "Error — cannot change MAX_CLUSTER_COUNT after warehouse creation"
+    correct Answer: "B"
+    explanation: >
+      Each ALTER WAREHOUSE command modifies only the specified property and leaves others unchanged.
+      After all three commands:
+      1. CREATE: SCALING_POLICY = STANDARD, MAX_CLUSTER_COUNT = 4 (initial state)
+      2. ALTER SET SCALING_POLICY = ECONOMY: changes policy only → SCALING_POLICY = ECONOMY, MAX = 4
+      3. ALTER SET MAX_CLUSTER_COUNT = 6: changes max only → SCALING_POLICY = ECONOMY, MAX = 6
+      
+      Final state: SCALING_POLICY = ECONOMY, MAX_CLUSTER_COUNT = 6, MIN_CLUSTER_COUNT = 1
+      Warehouse properties can be changed at any time via ALTER WAREHOUSE, even while the warehouse is running.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "032"
+    question: >
+      A Snowflake account has the following warehouse:
+      
+        WAREHOUSE: REPORTING_WH
+        SIZE: X-LARGE
+        MIN_CLUSTER_COUNT: 2
+        MAX_CLUSTER_COUNT: 8
+        SCALING_POLICY: STANDARD
+        CURRENT_CLUSTER_COUNT: 5
+      
+      The DBA wants to immediately reduce active clusters to 2 without suspending the warehouse.
+      Which approach is CORRECT?
+    their options:
+      option A: "ALTER WAREHOUSE REPORTING_WH SET CLUSTER_COUNT = 2;"
+      option B: "The DBA cannot manually set cluster count — only the scaling policy controls this"
+      option C: "ALTER WAREHOUSE REPORTING_WH SET MIN_CLUSTER_COUNT = 2 MAX_CLUSTER_COUNT = 2;"
+      option D: "SUSPEND WAREHOUSE REPORTING_WH; RESUME WAREHOUSE REPORTING_WH WITH CLUSTER_COUNT = 2;"
+      option E: "ALTER WAREHOUSE REPORTING_WH SCALE IN TO 2 CLUSTERS;"
+    correct Answer: "B"
+    explanation: >
+      In Snowflake, you CANNOT manually set the current number of active clusters in a Multi-Cluster
+      Warehouse. The cluster count is entirely controlled by:
+      - MIN_CLUSTER_COUNT (floor)
+      - MAX_CLUSTER_COUNT (ceiling)
+      - The active SCALING_POLICY (which governs when to add/remove clusters within those bounds)
+      
+      There is no ALTER WAREHOUSE ... SET CLUSTER_COUNT command, no SCALE IN syntax, and no way to
+      manually target a specific cluster count while keeping the warehouse active.
+      
+      If you want to force exactly 2 clusters, you'd set MIN=MAX=2, making it a fixed 2-cluster warehouse.
+      Option C would achieve a fixed 2-cluster configuration but would also cap MAX at 2, preventing
+      future scale-out. The closest correct answer to the intent would be C, but Option B correctly
+      identifies that arbitrary manual cluster count reduction is not a native Snowflake capability.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Architect, DataEngineer
+
+  - Question No: "033"
+    question: >
+      Which of the following are valid considerations when choosing between Standard and Economy
+      scaling policies for a data warehouse? (Select THREE)
+    their options:
+      option A: "Nature of the workload (interactive vs. batch)"
+      option B: "The Snowflake edition (Standard vs. Enterprise)"
+      option C: "Query response time SLA requirements"
+      option D: "Whether the workload runs during business hours or overnight"
+      option E: "The geographic region where the Snowflake account is hosted"
+    correct Answer: "A, C, D"
+    explanation: >
+      A: Interactive workloads (BI dashboards, ad-hoc queries) need Standard policy for fast response.
+         Batch workloads (ETL, data loads) can tolerate Economy policy's brief queuing.
+      C: SLA requirements directly dictate policy choice. Sub-second or low-second SLAs mandate Standard.
+         Flexible or no SLAs allow Economy for cost savings.
+      D: Business hours workloads typically have users waiting for results (need Standard). Overnight
+         workloads rarely have real-time stakeholders (Economy is appropriate).
+      
+      B: The edition affects WHETHER you can use multi-cluster at all (Enterprise+), but once you're
+         on Enterprise, the edition doesn't influence which scaling policy to choose.
+      E: Geographic region has no bearing on scaling policy choice — it's irrelevant to this decision.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core,Architect
+
+  - Question No: "034"
+    question: >
+      A company runs a Snowflake warehouse with Economy policy and notices that even during very
+      high load, the warehouse never scales beyond 2 clusters despite having MAX_CLUSTER_COUNT = 8.
+      What is the MOST LIKELY cause?
+    their options:
+      option A: "Economy policy has a hard limit of 2 clusters"
+      option B: "The queries are all being served from the result cache, reducing actual compute demand"
+      option C: "The account has reached its credit limit"
+      option D: "Economy policy may not scale beyond MIN+1 clusters unless load is exceptionally sustained"
+      option E: "The warehouse size (e.g., X-SMALL) is too small to support more than 2 clusters"
+    correct Answer: "B"
+    explanation: >
+      If a warehouse with up to 8 possible clusters only ever uses 2 even under apparent high load,
+      the most likely explanation is that most queries are being served from Snowflake's Query Result Cache.
+      Cached results don't consume warehouse compute and therefore don't register as cluster load.
+      This is actually GOOD behavior — it means the caching layer is working effectively.
+      
+      Economy policy does NOT have a fixed limit of 2 clusters (A is false).
+      Credit limits don't cause this specific behavior (C is possible but rare and would show errors).
+      Economy policy CAN scale to MAX_CLUSTER_COUNT if load is sustained — it's not limited to MIN+1 (D is false).
+      Warehouse size doesn't limit cluster count (E is false — any size can have up to 10 clusters).
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Architect"
+
+  - Question No: "035"
+    question: >
+      A multi-cluster warehouse is configured with SCALING_POLICY = STANDARD. A new query arrives
+      and finds that the current cluster is at full concurrency capacity. How quickly does Snowflake
+      start a new cluster?
+    their options:
+      option A: "After a 5-minute evaluation window"
+      option B: "After the current cluster's CPU exceeds 90% for 2 minutes"
+      option C: "Immediately — Standard policy starts new clusters as soon as queuing is detected"
+      option D: "After 10 consecutive queries have been queued"
+      option E: "Only if the query has been waiting for more than 60 seconds"
+    correct Answer: "C"
+    explanation: >
+      Standard scaling policy is designed for zero-tolerance to queuing. As soon as Snowflake detects
+      that a query must wait (is being queued), it immediately initiates the startup of an additional
+      cluster. There is no time-based evaluation window, no CPU threshold, no minimum queue length,
+      and no wait timer.
+      
+      This immediate response is the key differentiator of Standard vs Economy policy. The actual time
+      for the new cluster to become available and start accepting queries depends on cluster startup time
+      (typically seconds to about a minute), but the DECISION to start is instantaneous.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "036"
+    question: >
+      Consider this scenario: A warehouse team is analyzing query patterns using ACCOUNT_USAGE views.
+      They find that during a 2-hour window, WAREHOUSE_METERING_HISTORY shows the following:
+      
+        08:00–08:30: cluster_count = 1
+        08:30–09:00: cluster_count = 3
+        09:00–09:30: cluster_count = 3
+        09:30–10:00: cluster_count = 1
+      
+      Which scaling policy was MOST LIKELY active during this window?
+    their options:
+      option A: "Economy — because clusters ramped up slowly"
+      option B: "Standard — because clusters were added quickly and removed once load dropped"
+      option C: "Cannot determine from this data alone"
+      option D: "Economy — because the warehouse maintained high cluster count for a sustained period"
+      option E: "Standard — because clusters scaled from 1 to 3 in a single 30-minute window"
+    correct Answer: "C"
+    explanation: >
+      Based solely on cluster count snapshots in WAREHOUSE_METERING_HISTORY, you CANNOT definitively
+      determine the scaling policy. Here's why:
+      
+      - Standard policy: would scale to 3 quickly when queuing is detected, then scale back to 1
+        when load decreases. The pattern shown is consistent with Standard.
+      - Economy policy: might also reach 3 clusters if load was sustained long enough (30 minutes
+        is well beyond the Economy evaluation window), and would scale back when load drops.
+        The pattern shown is also consistent with Economy.
+      
+      To definitively determine the policy, you'd need to query INFORMATION_SCHEMA.WAREHOUSES or
+      SHOW WAREHOUSES to see the actual SCALING_POLICY setting. Metering history shows WHAT happened
+      (cluster counts), not WHY (the policy logic that drove the decisions).
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Architect, DataEngineer
+
+  - Question No: "037"
+    question: >
+      Which of the following statements about scaling policy and query queuing is CORRECT?
+    their options:
+      option A: "With Standard policy, no queries will EVER be queued"
+      option B: "With Economy policy, queries may queue briefly while Snowflake evaluates load"
+      option C: "With Economy policy, there is no limit on how long queries can be queued"
+      option D: "Scaling policy does not affect query queuing behavior"
+      option E: "Only Standard policy supports query queuing; Economy policy fails queries instead"
+    correct Answer: "B"
+    explanation: >
+      B is correct: Economy policy intentionally allows brief queuing while Snowflake evaluates whether
+      the load is sustained enough to justify starting a new cluster. This is the trade-off for cost savings.
+      
+      A is FALSE: Even with Standard policy, there will be VERY BRIEF queuing between when queuing is
+      detected and when the new cluster finishes starting (startup takes some seconds to ~1 minute).
+      Standard minimizes queuing but cannot make it zero.
+      
+      C is FALSE: Queries don't queue indefinitely. If load truly warrants it, Economy policy will
+      eventually start more clusters (up to MAX_CLUSTER_COUNT).
+      
+      D is FALSE: Scaling policy directly affects queuing — Standard minimizes it, Economy tolerates more of it.
+      E is FALSE: Both policies queue excess queries; neither fails them.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "038"
+    question: >
+      A Snowflake administrator runs this command:
+      
+        ALTER WAREHOUSE reporting_wh 
+          SET MIN_CLUSTER_COUNT = 1
+              MAX_CLUSTER_COUNT = 1;
+      
+      The warehouse previously had MIN=1, MAX=5, SCALING_POLICY=ECONOMY. What is the effect?
+    their options:
+      option A: "Warehouse now runs as a single-cluster warehouse; Economy policy setting is preserved but has no effect"
+      option B: "Warehouse is converted to Standard policy automatically when MAX=1"
+      option C: "Error — MIN_CLUSTER_COUNT cannot equal MAX_CLUSTER_COUNT"
+      option D: "Warehouse is suspended immediately"
+      option E: "Economy policy overrides and MIN remains 1 while MAX scales to 2 automatically"
+    correct Answer: "A"
+    explanation: >
+      Setting MIN_CLUSTER_COUNT = MAX_CLUSTER_COUNT = 1 converts the warehouse to effectively a
+      single-cluster warehouse. The key behaviors:
+      
+      1. The warehouse now always runs exactly 1 cluster (while not suspended).
+      2. The SCALING_POLICY = ECONOMY setting is preserved in the warehouse configuration — Snowflake
+         doesn't auto-remove it. However, since MIN=MAX=1, there's no dynamic scaling to occur, so
+         the policy has no operational effect.
+      3. No error occurs — MIN=MAX is a valid configuration.
+      4. The warehouse is not suspended by this command.
+      5. The policy doesn't auto-change or override anything.
+      
+      If you later want to re-enable multi-cluster, you'd just ALTER the MAX_CLUSTER_COUNT back to a
+      value greater than MIN.
+    difficulty level: Medium
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core, DataEngineer
+
+  - Question No: "039"
+    question: >
+      Which of the following correctly describes the relationship between warehouse SIZE and scaling
+      policy in a Multi-Cluster Warehouse?
+    their options:
+      option A: "Larger warehouse sizes automatically use Standard policy; smaller sizes use Economy"
+      option B: "Warehouse size and scaling policy are independent settings; size affects query performance per cluster, policy affects cluster count"
+      option C: "You must use Economy policy for warehouses larger than X-LARGE to control costs"
+      option D: "Scaling policy only applies to warehouses of size MEDIUM and above"
+      option E: "Changing warehouse size resets the scaling policy to Standard"
+    correct Answer: "B"
+    explanation: >
+      Warehouse SIZE and SCALING_POLICY are completely independent configuration dimensions:
+      
+      - SIZE (X-Small, Small, Medium, Large, X-Large, 2X-Large, 3X-Large, 4X-Large, 5X-Large, 6X-Large)
+        determines the compute power (CPU, memory) of EACH cluster. It affects how fast individual
+        queries run and how many concurrent queries a single cluster can handle.
+      
+      - SCALING_POLICY (Standard or Economy) determines HOW the number of clusters grows and shrinks
+        in response to concurrency demand.
+      
+      You can use any size with any scaling policy. A SMALL warehouse with Standard policy and 10 clusters
+      will have 10 small clusters. An X-LARGE with Economy and 10 clusters will have 10 very large clusters.
+      Changing size does NOT reset the policy.
+    difficulty level: Easy
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Core
+
+  - Question No: "040"
+    question: >
+      A company's data platform team wants to implement Snowflake best practices for a mixed workload
+      environment with:
+        - Heavy concurrent user queries (200+ analysts)
+        - Nightly bulk data loads
+        - Occasional large ad-hoc analytical queries (running for 30+ minutes)
+      
+      Which of the following warehouse designs BEST follows Snowflake scaling policy best practices?
+      (Select TWO)
+    their options:
+      option A: "One shared warehouse with Standard policy for all three workloads"
+      option B: "Separate user query warehouse (Standard, multi-cluster) + separate ETL warehouse (Economy, multi-cluster or single-cluster)"
+      option C: "Use Standard policy for all warehouses and rely on resource monitors to control costs"
+      option D: "Use Query Acceleration Service for ad-hoc large queries + separate analyst warehouse (Standard) + separate ETL warehouse (Economy)"
+      option E: "Use a single Economy policy warehouse for all workloads to minimize cost"
+    correct Answer: "B, D"
+    explanation: >
+      B is a best practice: Separating workloads into dedicated warehouses allows each to be optimized
+      independently. Standard policy for analysts ensures responsiveness; Economy policy for nightly
+      ETL controls costs since SLA is flexible.
+      
+      D extends B by adding the Query Acceleration Service (QAS) for large ad-hoc queries. QAS offloads
+      portions of large queries to a serverless, auto-scaled compute layer, preventing "large query
+      monopoly" on shared clusters. This is a recommended Snowflake architecture for mixed workloads.
+      
+      A is wrong: One shared warehouse creates resource contention and forces a single scaling policy
+      compromise that won't optimize for any workload.
+      C is wrong: Resource monitors track/limit credits but don't solve the architectural problem.
+      E is wrong: Economy policy for analyst workloads would create unacceptable queuing for 200+ users.
+    difficulty level: Hard
+    topic: Virtual Warehouse
+    sub topic: Scaling Policies
+    exam: Architect, DataEngineer

@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SnowPro Exam Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1628;
+    --panel: #1a2440;
+    --panel2: #1f2c4d;
+    --border: #2a3a5c;
+    --accent: #29d9ff;
+    --accent2: #7b5ea7;
+    --accent5: #fbbf24;
+    --text: #e2eaf8;
+    --text2: #8fa5cc;
+    --text3: #5a72a0;
+    --correct: #4ade80;
+    --wrong: #ff6b6b;
+    --skipped: #fbbf24;
+    --review: #a78bfa;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; inset:0; z-index:0;
+    background-image: linear-gradient(rgba(41,217,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(41,217,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none;
+  }
+
+  /* TOP BAR */
+  #topbar {
+    position:fixed; top:0; left:0; right:0; z-index:100; height:56px;
+    background:rgba(10,14,26,0.95); backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:12px;
+  }
+  .logo { font-family:'Space Mono',monospace; font-size:13px; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:8px; white-space:nowrap; }
+  .logo-badge { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#000; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; }
+  .tab-nav { display:flex; gap:3px; margin-left:16px; }
+  .tab-btn { padding:5px 14px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid transparent; cursor:pointer; transition:all 0.2s; font-family:'Syne',sans-serif; background:transparent; color:var(--text2); }
+  .tab-btn.active { background:var(--panel2); border-color:var(--border); color:var(--accent); }
+  .tab-btn:hover:not(.active) { color:var(--text); background:var(--panel); }
+  #file-controls { margin-left:auto; display:flex; gap:8px; align-items:center; }
+  .btn { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid var(--border); cursor:pointer; transition:all 0.2s; font-family:'Syne',sans-serif; background:var(--panel); color:var(--text); white-space:nowrap; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),#0ea5e9); border-color:transparent; color:#000; font-weight:700; }
+  .btn-primary:hover { opacity:0.85; color:#000; }
+  .btn-submit { background:linear-gradient(135deg,#fbbf24,#f59e0b); border-color:transparent; color:#000; font-weight:700; font-size:14px; padding:10px 28px; border-radius:8px; }
+  .btn-submit:hover { opacity:0.88; color:#000; }
+  .btn-submit:disabled { opacity:0.32; cursor:not-allowed; pointer-events:none; }
+  .btn-danger { background:var(--wrong); border-color:transparent; color:#fff; font-weight:700; }
+  .btn-danger:hover { opacity:0.85; color:#fff; border-color:transparent; }
+
+  #app { padding-top:56px; min-height:100vh; }
+  .section-title { font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--text3); margin-bottom:14px; }
+
+  /* STAT CARDS */
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:10px; margin-bottom:22px; }
+  .stat-card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 16px; position:relative; overflow:hidden; transition:transform 0.2s,border-color 0.2s; }
+  .stat-card:hover { transform:translateY(-2px); border-color:var(--accent); }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .stat-card.c-total::before    { background:var(--accent); }
+  .stat-card.c-attempted::before{ background:var(--accent2); }
+  .stat-card.c-correct::before  { background:var(--correct); }
+  .stat-card.c-wrong::before    { background:var(--wrong); }
+  .stat-card.c-skipped::before  { background:var(--skipped); }
+  .stat-card.c-review::before   { background:var(--review); }
+  .stat-val { font-size:30px; font-weight:800; line-height:1; font-family:'Space Mono',monospace; margin-bottom:4px; }
+  .stat-card.c-total .stat-val     { color:var(--accent); }
+  .stat-card.c-attempted .stat-val { color:var(--accent2); }
+  .stat-card.c-correct .stat-val   { color:var(--correct); }
+  .stat-card.c-wrong .stat-val     { color:var(--wrong); }
+  .stat-card.c-skipped .stat-val   { color:var(--skipped); }
+  .stat-card.c-review .stat-val    { color:var(--review); }
+  .stat-label { font-size:11px; color:var(--text2); font-weight:600; }
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
+  .pop-anim { animation:pop 0.35s ease; }
+
+  /* PROGRESS */
+  .progress-section { margin-bottom:22px; }
+  .progress-item { margin-bottom:10px; }
+  .progress-header { display:flex; justify-content:space-between; margin-bottom:5px; font-size:12px; }
+  .progress-name { color:var(--text2); }
+  .progress-pct { font-family:'Space Mono',monospace; font-size:11px; color:var(--accent); }
+  .progress-bar { height:5px; background:var(--panel2); border-radius:3px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:3px; transition:width 0.5s ease; }
+
+  /* META */
+  .meta-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-bottom:22px; }
+  .meta-card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  .meta-card-title { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
+  .tag-list { display:flex; flex-wrap:wrap; gap:5px; }
+  .tag { padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; transition:all 0.15s; border:1px solid transparent; background:var(--panel2); color:var(--text2); }
+  .tag.active { border-color:var(--accent); color:var(--accent); background:rgba(41,217,255,0.08); }
+  .tag:hover:not(.active) { border-color:var(--border); color:var(--text); }
+  .tag.exam-core { border-color:rgba(41,217,255,0.3); color:var(--accent); }
+  .tag.exam-de   { border-color:rgba(123,94,167,0.5); color:var(--accent2); }
+  .tag.exam-arch { border-color:rgba(251,191,36,0.4); color:var(--accent5); }
+  .tag.exam-da   { border-color:rgba(74,222,128,0.4); color:var(--correct); }
+  .diff-easy   { color:var(--correct); border-color:rgba(74,222,128,0.4); }
+  .diff-medium { color:var(--skipped); border-color:rgba(251,191,36,0.4); }
+  .diff-hard   { color:var(--wrong);   border-color:rgba(255,107,107,0.4); }
+
+  /* DASHBOARD */
+  #view-dashboard { padding:26px 20px; max-width:1400px; margin:0 auto; }
+  #filter-panel { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:22px; }
+  .filter-row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+  .filter-group { display:flex; flex-direction:column; gap:7px; }
+  .filter-label { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text3); }
+  .filter-tags { display:flex; flex-wrap:wrap; gap:5px; }
+  .upload-zone { border:2px dashed var(--border); border-radius:14px; padding:36px 28px; text-align:center; cursor:pointer; transition:all 0.2s; background:var(--panel); margin-bottom:22px; }
+  .upload-zone:hover,.upload-zone.drag-over { border-color:var(--accent); background:rgba(41,217,255,0.04); }
+  .upload-icon { font-size:32px; margin-bottom:10px; }
+  .upload-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .upload-desc { font-size:12px; color:var(--text2); }
+  .files-loaded { margin-top:12px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .file-chip { padding:3px 10px; background:var(--panel2); border:1px solid var(--border); border-radius:20px; font-size:11px; color:var(--text2); display:flex; align-items:center; gap:5px; }
+  .file-chip .remove { cursor:pointer; color:var(--wrong); font-size:13px; }
+
+  /* EXAM LAYOUT */
+  #view-exam { display:none; padding:18px 20px; }
+  .exam-layout { display:grid; grid-template-columns:1fr 290px; gap:18px; max-width:1280px; margin:0 auto; align-items:start; }
+  .exam-main { min-width:0; }
+  .exam-topbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .q-counter { font-family:'Space Mono',monospace; font-size:12px; color:var(--text2); white-space:nowrap; }
+  .exam-prog-wrap { flex:1; height:5px; background:var(--panel2); border-radius:3px; overflow:hidden; min-width:60px; }
+  .exam-prog-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:3px; transition:width 0.3s; }
+
+  .q-card { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:26px; margin-bottom:14px; animation:fadeIn 0.28s ease; }
+  .q-meta { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .q-badge { padding:2px 9px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:0.4px; }
+  .badge-num    { background:var(--panel2); color:var(--text3); border:1px solid var(--border); font-family:'Space Mono',monospace; }
+  .badge-diff-easy   { background:rgba(74,222,128,0.12); color:var(--correct); border:1px solid rgba(74,222,128,0.3); }
+  .badge-diff-medium { background:rgba(251,191,36,0.12);  color:var(--skipped); border:1px solid rgba(251,191,36,0.3); }
+  .badge-diff-hard   { background:rgba(255,107,107,0.12); color:var(--wrong);   border:1px solid rgba(255,107,107,0.3); }
+  .badge-exam  { background:rgba(41,217,255,0.08);  color:var(--accent);  border:1px solid rgba(41,217,255,0.2); }
+  .badge-topic { background:rgba(123,94,167,0.12);  color:var(--accent2); border:1px solid rgba(123,94,167,0.2); }
+  .badge-review-tag { background:rgba(167,139,250,0.12); color:var(--review); border:1px solid rgba(167,139,250,0.3); }
+
+  .q-text { font-size:16px; font-weight:600; line-height:1.55; color:var(--text); margin-bottom:20px; }
+  .options-list { display:flex; flex-direction:column; gap:8px; }
+  .option-btn { display:flex; align-items:flex-start; gap:12px; padding:12px 15px; border-radius:10px; border:1.5px solid var(--border); cursor:pointer; transition:all 0.15s; background:var(--panel2); text-align:left; font-family:'Syne',sans-serif; font-size:14px; color:var(--text2); width:100%; }
+  .option-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--text); background:rgba(41,217,255,0.05); }
+  .option-btn.selected { border-color:var(--accent); color:var(--text); background:rgba(41,217,255,0.08); }
+  .option-btn.correct  { border-color:var(--correct); color:var(--correct); background:rgba(74,222,128,0.08); }
+  .option-btn.wrong    { border-color:var(--wrong);   color:var(--wrong);   background:rgba(255,107,107,0.08); }
+  .option-btn:disabled { cursor:default; }
+  .opt-letter { min-width:25px; height:25px; border-radius:6px; background:var(--panel); display:flex; align-items:center; justify-content:center; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; color:var(--text3); border:1px solid var(--border); flex-shrink:0; transition:all 0.15s; }
+  .option-btn.selected .opt-letter { background:var(--accent);  color:#000; border-color:var(--accent); }
+  .option-btn.correct  .opt-letter { background:var(--correct); color:#000; border-color:var(--correct); }
+  .option-btn.wrong    .opt-letter { background:var(--wrong);   color:#fff; border-color:var(--wrong); }
+
+  .result-banner { margin-top:14px; padding:13px 16px; border-radius:10px; display:none; align-items:center; gap:12px; }
+  .result-banner.show { display:flex; animation:fadeIn 0.3s ease; }
+  .result-banner.ok { background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.25); }
+  .result-banner.ng { background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); }
+  .result-icon { font-size:22px; flex-shrink:0; }
+  .result-text { font-size:13px; font-weight:700; }
+  .result-banner.ok .result-text { color:var(--correct); }
+  .result-banner.ng .result-text { color:var(--wrong); }
+  .result-correct-ans { font-size:11px; color:var(--text2); margin-top:2px; }
+
+  .explanation { margin-top:14px; padding:16px; border-radius:10px; display:none; background:rgba(41,217,255,0.04); border:1px solid rgba(41,217,255,0.13); }
+  .explanation.show { display:block; animation:fadeIn 0.3s ease; }
+  .explanation-title { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+  .explanation-text { font-size:13px; line-height:1.7; color:var(--text2); white-space:pre-wrap; }
+
+  .q-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+  /* LIVE SIDEBAR */
+  .session-sidebar { position:sticky; top:74px; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:14px; }
+  .sidebar-title { font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--text3); }
+
+  /* Score ring */
+  .score-ring-wrap { display:flex; align-items:center; justify-content:center; padding:4px 0; }
+  .score-ring-inner { position:relative; width:100px; height:100px; }
+  .score-ring-inner svg { transform:rotate(-90deg); }
+  .ring-bg { fill:none; stroke:var(--panel2); stroke-width:8; }
+  .ring-progress { fill:none; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.5s ease, stroke 0.3s; }
+  .ring-text { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-pct { font-family:'Space Mono',monospace; font-size:20px; font-weight:700; color:var(--text); }
+  .ring-sublabel { font-size:9px; color:var(--text3); font-weight:600; letter-spacing:1.5px; text-transform:uppercase; }
+
+  /* Stacked bar */
+  .stacked-bar { height:6px; border-radius:3px; overflow:hidden; background:var(--panel2); display:flex; }
+  .stacked-seg { height:100%; transition:width 0.45s ease; }
+
+  /* Mini stats */
+  .mini-stats { display:flex; flex-direction:column; gap:7px; }
+  .mini-stat { display:flex; align-items:center; gap:9px; padding:8px 11px; border-radius:8px; border:1px solid var(--border); background:var(--panel2); }
+  .mini-stat-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .mini-stat-label { font-size:11px; color:var(--text2); flex:1; font-weight:600; }
+  .mini-stat-val { font-family:'Space Mono',monospace; font-size:13px; font-weight:700; min-width:22px; text-align:right; transition:all 0.25s; }
+  .mini-stat-of { font-size:9px; color:var(--text3); font-family:'Space Mono',monospace; }
+  .mini-stat.ms-correct  { border-color:rgba(74,222,128,0.2); }
+  .mini-stat.ms-correct  .mini-stat-dot { background:var(--correct); }
+  .mini-stat.ms-correct  .mini-stat-val { color:var(--correct); }
+  .mini-stat.ms-wrong    { border-color:rgba(255,107,107,0.2); }
+  .mini-stat.ms-wrong    .mini-stat-dot { background:var(--wrong); }
+  .mini-stat.ms-wrong    .mini-stat-val { color:var(--wrong); }
+  .mini-stat.ms-skipped  { border-color:rgba(251,191,36,0.2); }
+  .mini-stat.ms-skipped  .mini-stat-dot { background:var(--skipped); }
+  .mini-stat.ms-skipped  .mini-stat-val { color:var(--skipped); }
+  .mini-stat.ms-review   { border-color:rgba(167,139,250,0.2); }
+  .mini-stat.ms-review   .mini-stat-dot { background:var(--review); }
+  .mini-stat.ms-review   .mini-stat-val { color:var(--review); }
+  .mini-stat.ms-remaining{ border-color:rgba(41,217,255,0.15); }
+  .mini-stat.ms-remaining .mini-stat-dot { background:var(--accent); }
+  .mini-stat.ms-remaining .mini-stat-val { color:var(--accent); }
+
+  /* Nav dots */
+  .q-nav-dots { display:flex; flex-wrap:wrap; gap:4px; max-height:96px; overflow-y:auto; }
+  .q-dot { width:19px; height:19px; border-radius:4px; cursor:pointer; font-size:8px; font-family:'Space Mono',monospace; font-weight:700; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--panel2); color:var(--text3); transition:all 0.15s; }
+  .q-dot:hover    { border-color:var(--accent); color:var(--accent); }
+  .q-dot.current  { border-color:var(--accent); background:rgba(41,217,255,0.15); color:var(--accent); }
+  .q-dot.d-correct{ background:rgba(74,222,128,0.18); border-color:var(--correct); color:var(--correct); }
+  .q-dot.d-wrong  { background:rgba(255,107,107,0.18); border-color:var(--wrong); color:var(--wrong); }
+  .q-dot.d-skipped{ background:rgba(251,191,36,0.18); border-color:var(--skipped); color:var(--skipped); }
+  .q-dot.d-review { background:rgba(167,139,250,0.18); border-color:var(--review); color:var(--review); }
+
+  /* SUMMARY */
+  #view-summary { padding:26px 20px; max-width:900px; margin:0 auto; display:none; }
+  .summary-score { text-align:center; padding:36px 28px; background:var(--panel); border:1px solid var(--border); border-radius:18px; margin-bottom:22px; }
+  .score-pct { font-size:68px; font-weight:800; font-family:'Space Mono',monospace; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1; }
+  .score-label { font-size:14px; color:var(--text2); margin-top:8px; }
+  .review-table { width:100%; border-collapse:collapse; }
+  .review-table th,.review-table td { padding:9px 12px; text-align:left; font-size:12px; border-bottom:1px solid var(--border); }
+  .review-table th { color:var(--text3); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; }
+  .review-table tr:hover td { background:var(--panel2); cursor:pointer; }
+  .status-dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Reset dropdown menu */
+  .reset-menu-item { display:block; width:100%; padding:9px 12px; border-radius:7px; border:none; background:transparent; cursor:pointer; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; color:var(--text); text-align:left; transition:background 0.15s; line-height:1.4; }
+  .reset-menu-item:hover { background:var(--panel2); }
+
+  /* Shuffle indicator badge */
+  #btn-shuffle.shuffled { border-color:var(--accent); color:var(--accent); background:rgba(41,217,255,0.08); }
+
+  #notif { position:fixed; bottom:18px; right:18px; z-index:999; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:10px 16px; font-size:12px; font-weight:600; transform:translateY(60px); opacity:0; transition:all 0.3s; max-width:270px; }
+  #notif.show { transform:translateY(0); opacity:1; }
+  #notif.success { border-color:var(--correct); color:var(--correct); }
+  #notif.error   { border-color:var(--wrong);   color:var(--wrong); }
+  #notif.info    { border-color:var(--accent);  color:var(--accent); }
+
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* Multi-select question styles */
+  .badge-multi { background:rgba(167,139,250,0.14); color:var(--review); border:1px solid rgba(167,139,250,0.4); }
+  .opt-checkbox {
+    min-width:18px; height:18px; border-radius:4px; background:var(--panel);
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:900; color:transparent;
+    border:2px solid var(--border); flex-shrink:0; transition:all 0.15s;
+  }
+  /* For multi-select, the opt-letter becomes a checkbox indicator */
+  .option-btn.multi-mode .opt-letter { border-radius:4px; }
+  .option-btn.multi-mode.selected .opt-letter { background:var(--review); border-color:var(--review); color:#fff; }
+  .option-btn.multi-mode.selected .opt-letter::after { content:'✓'; font-size:11px; }
+  .option-btn.multi-mode.correct .opt-letter { background:var(--correct); border-color:var(--correct); color:#000; }
+  .option-btn.multi-mode.wrong   .opt-letter { background:var(--wrong);   border-color:var(--wrong);   color:#fff; }
+  .option-btn.multi-mode.missed  { border-color:var(--correct); background:rgba(74,222,128,0.05); }
+  .option-btn.multi-mode.missed .opt-letter { background:rgba(74,222,128,0.3); border-color:var(--correct); color:var(--correct); }
+
+  .multi-hint {
+    display:inline-flex; align-items:center; gap:6px; margin-bottom:14px;
+    padding:6px 12px; border-radius:8px;
+    background:rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.25);
+    font-size:12px; color:var(--review); font-weight:600;
+  }
+
+  /* Partial credit bar */
+  .partial-bar-wrap { margin-top:8px; }
+  .partial-bar-label { font-size:11px; color:var(--text2); margin-bottom:4px; }
+  .partial-bar { height:4px; background:var(--panel2); border-radius:2px; overflow:hidden; }
+  .partial-bar-fill { height:100%; border-radius:2px; transition:width 0.4s ease; }
+
+  /* Active filter chips */
+
+  .active-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; background:rgba(41,217,255,0.12); border:1px solid rgba(41,217,255,0.35); color:var(--accent); }
+  .active-chip .chip-x { cursor:pointer; font-size:13px; line-height:1; opacity:0.7; }
+  .active-chip .chip-x:hover { opacity:1; }
+  .active-chip.chip-exam   { background:rgba(41,217,255,0.1);  border-color:rgba(41,217,255,0.35); color:var(--accent); }
+  .active-chip.chip-topic  { background:rgba(123,94,167,0.1);  border-color:rgba(123,94,167,0.4); color:var(--accent2); }
+  .active-chip.chip-diff   { background:rgba(251,191,36,0.1);  border-color:rgba(251,191,36,0.35); color:var(--accent5); }
+  .active-chip.chip-status { background:rgba(74,222,128,0.1);  border-color:rgba(74,222,128,0.3); color:var(--correct); }
+  #active-filter-bar:empty::before { content:"No filters applied — showing all questions"; font-size:11px; color:var(--text3); font-style:italic; }
+
+  /* Q-type filter buttons in sidebar */
+  .q-type-btn { padding:3px 8px; border-radius:5px; font-size:10px; font-weight:700; border:1px solid var(--border); background:var(--panel); cursor:pointer; font-family:'Syne',sans-serif; transition:all 0.15s; color:var(--text3); }
+  .q-type-btn:hover { border-color:var(--accent); }
+  .q-type-btn.active { background:rgba(41,217,255,0.12); border-color:var(--accent); color:var(--accent); }
+
+  /* Explanation moved outside card - below action buttons */
+  .explanation-outside { margin-top:14px; padding:16px; border-radius:10px; display:none; background:rgba(41,217,255,0.04); border:1px solid rgba(41,217,255,0.13); animation:fadeIn 0.3s ease; }
+  .explanation-outside.show { display:block; }
+
+  @media(max-width:860px) {
+    .exam-layout { grid-template-columns:1fr; }
+    .session-sidebar { position:static; }
+  }
+  @media(max-width:560px) {
+    .tab-btn { padding:4px 9px; font-size:11px; }
+    .q-text { font-size:14px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo"><span class="logo-badge">SF</span>SnowPro Simulator</div>
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="showView('dashboard')">Dashboard</button>
+    <button class="tab-btn"        onclick="showView('exam')">Exam Mode</button>
+    <button class="tab-btn"        onclick="showView('summary')">Review</button>
+  </nav>
+  <div id="file-controls">
+    <input type="file" id="file-input" multiple accept=".yml,.yaml" style="display:none" onchange="handleFiles(this.files)">
+    <button class="btn" onclick="document.getElementById('file-input').click()">+ Load YAML</button>
+    <div style="position:relative">
+      <button class="btn btn-danger" onclick="toggleResetMenu()" id="btn-reset-toggle">↺ Reset ▾</button>
+      <div id="reset-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:200;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
+        <button class="reset-menu-item" onclick="doSoftReset()">↺ Clear Progress Only<br><span style="font-size:10px;color:var(--text3);font-weight:400">Keep loaded YAML files</span></button>
+        <button class="reset-menu-item" style="color:var(--wrong);margin-top:4px" onclick="doFullReset()">⊗ Full Reset<br><span style="font-size:10px;color:var(--text3);font-weight:400">Remove files + clear everything</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<div id="view-dashboard">
+
+  <div class="upload-zone" id="dropzone"
+       ondragover="event.preventDefault();this.classList.add('drag-over')"
+       ondragleave="this.classList.remove('drag-over')"
+       ondrop="event.preventDefault();this.classList.remove('drag-over');handleFiles(event.dataTransfer.files)"
+       onclick="document.getElementById('file-input').click()">
+    <div class="upload-icon">❄️</div>
+    <div class="upload-title">Drop SnowPro YAML Knowledge Base Files Here</div>
+    <div class="upload-desc">Click to browse &nbsp;·&nbsp; Accepts .yml / .yaml files</div>
+    <div class="files-loaded" id="files-list"></div>
+  </div>
+
+  <div class="section-title">Overall Progress</div>
+  <div class="stats-grid">
+    <div class="stat-card c-total">    <div class="stat-val" id="stat-total">0</div>    <div class="stat-label">Total Questions</div></div>
+    <div class="stat-card c-attempted"><div class="stat-val" id="stat-attempted">0</div><div class="stat-label">Attempted</div></div>
+    <div class="stat-card c-correct">  <div class="stat-val" id="stat-correct">0</div>  <div class="stat-label">Correct</div></div>
+    <div class="stat-card c-wrong">    <div class="stat-val" id="stat-wrong">0</div>    <div class="stat-label">Incorrect</div></div>
+    <div class="stat-card c-skipped">  <div class="stat-val" id="stat-skipped">0</div>  <div class="stat-label">Skipped</div></div>
+    <div class="stat-card c-review">   <div class="stat-val" id="stat-review">0</div>   <div class="stat-label">For Review</div></div>
+  </div>
+
+  <div class="progress-section">
+    <div class="section-title">Progress by Exam</div>
+    <div id="exam-progress-bars"></div>
+  </div>
+
+  <div class="meta-grid" id="meta-grid"></div>
+
+  <div id="filter-panel">
+    <div class="section-title">Filter &amp; Start</div>
+    <div class="filter-row">
+      <div class="filter-group"><div class="filter-label">Exam</div><div class="filter-tags" id="filter-exam"></div></div>
+      <div class="filter-group"><div class="filter-label">Topic</div><div class="filter-tags" id="filter-topic"></div></div>
+      <div class="filter-group"><div class="filter-label">Sub Topic</div><div class="filter-tags" id="filter-subtopic"></div></div>
+      <div class="filter-group"><div class="filter-label">Difficulty</div><div class="filter-tags" id="filter-diff"></div></div>
+      <div class="filter-group"><div class="filter-label">Status</div><div class="filter-tags" id="filter-status"></div></div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="startExam()">▶ Start Exam</button>
+        <button class="btn" onclick="shuffleQuestions()" id="btn-shuffle">⇌ Shuffle Order</button>
+        <button class="btn" onclick="clearFilters()">Clear</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+      <div id="active-filter-bar" style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-height:22px"></div>
+      <div style="font-size:12px;color:var(--text3);white-space:nowrap;align-self:center"><span id="filtered-count">0</span> questions match</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ EXAM ═══════════ -->
+<div id="view-exam">
+  <div class="exam-layout">
+
+    <!-- LEFT: Question -->
+    <div class="exam-main">
+      <div class="exam-topbar">
+        <div class="q-counter" id="q-counter">Q 1 of 0</div>
+        <div class="exam-prog-wrap"><div class="exam-prog-fill" id="exam-prog-fill"></div></div>
+        <button class="btn" onclick="markReview()" id="btn-review">⚑ Review</button>
+        <button class="btn" onclick="skipQuestion()">→ Skip</button>
+        <button class="btn btn-danger" onclick="finishExam()">⬛ Finish</button>
+      </div>
+
+      <div id="q-card-container"></div>
+
+      <div class="q-actions" id="q-actions">
+        <button class="btn btn-submit" id="btn-submit" onclick="submitAnswer()">✔ Submit Answer</button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">Next Question →</button>
+        <button class="btn" id="btn-prev" onclick="prevQuestion()">← Prev</button>
+      </div>
+      <!-- Explanation rendered here, outside the card, below buttons -->
+      <div class="explanation-outside" id="explanation-outside">
+        <div class="explanation-title">Explanation</div>
+        <div class="explanation-text" id="explanation-text"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Live Session Summary Sidebar -->
+    <div class="session-sidebar">
+      <div class="sidebar-title">Live Session</div>
+
+      <!-- Score ring -->
+      <div class="score-ring-wrap">
+        <div class="score-ring-inner">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="42"/>
+            <circle class="ring-progress" id="ring-path" cx="50" cy="50" r="42"
+              stroke="var(--correct)" stroke-dasharray="263.89" stroke-dashoffset="263.89"/>
+          </svg>
+          <div class="ring-text">
+            <div class="ring-pct" id="ring-pct">0%</div>
+            <div class="ring-sublabel">Score</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stacked bar -->
+      <div>
+        <div class="stacked-bar">
+          <div class="stacked-seg" id="seg-correct" style="width:0%;background:var(--correct)"></div>
+          <div class="stacked-seg" id="seg-wrong"   style="width:0%;background:var(--wrong)"></div>
+          <div class="stacked-seg" id="seg-skipped" style="width:0%;background:var(--skipped)"></div>
+          <div class="stacked-seg" id="seg-review"  style="width:0%;background:var(--review)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">
+          <span style="color:var(--correct)">✓</span>
+          <span style="color:var(--wrong)">✗</span>
+          <span style="color:var(--skipped)">→</span>
+          <span style="color:var(--review)">⚑</span>
+        </div>
+      </div>
+
+      <!-- Mini stats -->
+      <div class="mini-stats">
+        <div class="mini-stat ms-correct">
+          <div class="mini-stat-dot"></div>
+          <div class="mini-stat-label">Correct</div>
+          <div class="mini-stat-val" id="ms-correct">0</div>
+          <div class="mini-stat-of" id="ms-correct-of">/0</div>
+        </div>
+        <div class="mini-stat ms-wrong">
+          <div class="mini-stat-dot"></div>
+          <div class="mini-stat-label">Wrong</div>
+          <div class="mini-stat-val" id="ms-wrong">0</div>
+          <div class="mini-stat-of" id="ms-wrong-of">/0</div>
+        </div>
+        <div class="mini-stat ms-skipped">
+          <div class="mini-stat-dot"></div>
+          <div class="mini-stat-label">Skipped</div>
+          <div class="mini-stat-val" id="ms-skipped">0</div>
+          <div class="mini-stat-of" id="ms-skipped-of">/0</div>
+        </div>
+        <div class="mini-stat ms-review">
+          <div class="mini-stat-dot"></div>
+          <div class="mini-stat-label">For Review</div>
+          <div class="mini-stat-val" id="ms-review">0</div>
+          <div class="mini-stat-of" id="ms-review-of">/0</div>
+        </div>
+        <div class="mini-stat ms-remaining">
+          <div class="mini-stat-dot"></div>
+          <div class="mini-stat-label">Remaining</div>
+          <div class="mini-stat-val" id="ms-remaining">0</div>
+          <div class="mini-stat-of" id="ms-remaining-of">/0</div>
+        </div>
+      </div>
+
+      <!-- Nav dots with type filter -->
+      <div>
+        <div class="section-title" style="margin-bottom:8px">Jump to Question</div>
+        <div id="q-type-filter" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+          <button class="q-type-btn active" data-filter="all"    onclick="setQFilter('all')">All</button>
+          <button class="q-type-btn" data-filter="unanswered"    onclick="setQFilter('unanswered')" style="color:var(--text3)">Unseen</button>
+          <button class="q-type-btn" data-filter="review"        onclick="setQFilter('review')" style="color:var(--review)">⚑ Review</button>
+          <button class="q-type-btn" data-filter="wrong"         onclick="setQFilter('wrong')" style="color:var(--wrong)">✗ Wrong</button>
+          <button class="q-type-btn" data-filter="skipped"       onclick="setQFilter('skipped')" style="color:var(--skipped)">→ Skipped</button>
+          <button class="q-type-btn" data-filter="correct"       onclick="setQFilter('correct')" style="color:var(--correct)">✓ Correct</button>
+        </div>
+        <div class="q-nav-dots" id="q-nav-dots"></div>
+        <div id="q-filter-empty" style="display:none;font-size:11px;color:var(--text3);padding:6px 0">No questions in this category</div>
+      </div>
+
+      <button class="btn btn-danger" onclick="finishExam()" style="width:100%">⬛ End &amp; Review</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ SUMMARY ═══════════ -->
+<div id="view-summary">
+  <div class="section-title">Session Summary</div>
+
+  <!-- Applied filter notice -->
+  <div id="sum-filter-notice" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:10px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25)">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent5);margin-bottom:8px">⚠ Session was started with active filters</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px">This session shows only a filtered subset of your knowledge base. The question log below reflects only those filtered questions.</div>
+    <div id="sum-filter-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+
+  <div class="summary-score">
+    <div class="score-pct" id="sum-pct">—</div>
+    <div class="score-label" id="sum-label">Complete an exam to see results</div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="sum-stats"></div>
+  </div>
+  <div class="section-title">Question Log</div>
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:auto">
+    <table class="review-table">
+      <thead><tr><th>#</th><th>Question</th><th>Topic</th><th>Difficulty</th><th>Status</th><th>Your Ans</th><th>Correct Ans</th></tr></thead>
+      <tbody id="review-table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+<div id="notif"></div>
+
+<script>
+const state = {
+  allQuestions:[],filteredQuestions:[],session:[],
+  sessionIndex:0,answers:{},loadedFiles:[],
+  filters:{exam:new Set(),topic:new Set(),subtopic:new Set(),diff:new Set(),status:new Set()},
+  qFilter:'all',
+  sessionFilters:{},
+  _shuffled:false
+};
+
+function optKey(k){
+  const m=String(k).match(/[A-Ea-e]/);
+  return m?m[0].toUpperCase():String(k).slice(-1).toUpperCase();
+}
+
+function parseYAML(text){
+  try{
+    const data=jsyaml.load(text);
+    const qs=[];
+    const allQ=data['all questions']||data['all question']||[];
+    if(!Array.isArray(allQ))return qs;
+    allQ.forEach((q,i)=>{
+      const options=[];
+      const opts=q['their options']||q.options||{};
+      for(const[k,v]of Object.entries(opts)){
+        if(/^option/i.test(k)) options.push({letter:optKey(k),text:String(v||'')});
+      }
+      const cr=String(q['correct Answer']||q['correct answer']||'');
+      // Extract ALL letter matches (supports multi-select: "option A, option C" or "A,C" or "A and C")
+      const allMatches=[...cr.matchAll(/\b([A-Ea-e])\b/g)].map(m=>m[1].toUpperCase());
+      const cl=allMatches.length===1?allMatches[0]:''; // single answer letter (legacy)
+      const correctLetters=allMatches.length>0?allMatches:[]; // array for multi-select
+      const exams=String(q.exam||q.Exam||'').split(',').map(e=>e.trim()).filter(Boolean);
+      const qObj={
+        id:`q_${Date.now()}_${i}_${Math.random().toString(36).slice(2)}`,
+        no:String(q['Question No']||(i+1)),
+        question:String(q.question||q.Question||''),
+        options,
+        correctLetter:cl,                         // single-answer (legacy compat)
+        correctLetters:correctLetters,             // array — length>1 means multi-select
+        isMulti:correctLetters.length>1,           // convenience flag
+        explanation:String(q.explanation||q.Explanation||''),
+        difficulty:String(q['difficulty level']||q['dificulty level']||q.difficulty||'Medium').trim(),
+        topic:String(q.topic||q.Topic||data['Topic Name']||''),
+        subtopic:String(q['sub topic']||q['Sub topic']||q.subtopic||data['Sub Topic Name']||''),
+        exams
+      };
+      if(qObj.question)qs.push(qObj);
+    });
+    return qs;
+  }catch(e){console.error(e);return[];}
+}
+
+async function handleFiles(files){
+  for(const file of files){
+    if(state.loadedFiles.find(f=>f.name===file.name))continue;
+    const text=await file.text();
+    const qs=parseYAML(text);
+    if(!qs.length){showNotif(`No questions found in ${file.name}`,'error');continue;}
+    state.allQuestions.push(...qs);
+    state.loadedFiles.push({name:file.name,count:qs.length});
+    showNotif(`✓ Loaded ${qs.length} questions from ${file.name}`,'success');
+  }
+  renderFileChips();applyFilters();updateDashboard();
+}
+
+function renderFileChips(){
+  document.getElementById('files-list').innerHTML=state.loadedFiles.map((f,i)=>
+    `<div class="file-chip">❄️ ${f.name} <span style="color:var(--accent)">(${f.count})</span>
+     <span class="remove" onclick="event.stopPropagation();removeFile(${i})">×</span></div>`
+  ).join('');
+}
+function removeFile(i){showNotif(`Reload page to fully clear ${state.loadedFiles[i].name}`,'info');state.loadedFiles.splice(i,1);renderFileChips();}
+
+function getMetadata(){
+  const exams=new Set(),topics=new Set(),subtopics=new Set(),diffs=new Set();
+  state.allQuestions.forEach(q=>{q.exams.forEach(e=>exams.add(e));if(q.topic)topics.add(q.topic);if(q.subtopic)subtopics.add(q.subtopic);if(q.difficulty)diffs.add(q.difficulty);});
+  return{exams:[...exams].sort(),topics:[...topics].sort(),subtopics:[...subtopics].sort(),diffs:[...diffs]};
+}
+
+function renderFilterTags(){
+  const{exams,topics,diffs}=getMetadata();
+  const ec={Core:'exam-core',DataEngineer:'exam-de',Architect:'exam-arch',DataAnalyst:'exam-da'};
+  const dc={Easy:'diff-easy',Medium:'diff-medium',Hard:'diff-hard'};
+  const statuses=['Unanswered','Correct','Wrong','Skipped','Review'];
+
+  function makeTag(containerEl, type, val, extraClass){
+    const span=document.createElement('span');
+    span.className='tag '+(extraClass||'')+(state.filters[type].has(val)?' active':'');
+    span.textContent=val;
+    span.dataset.type=type;
+    span.dataset.val=val;
+    span.addEventListener('click',()=>toggleFilter(type,val));
+    containerEl.appendChild(span);
+  }
+
+  const fe=document.getElementById('filter-exam');      fe.innerHTML='';
+  const ft=document.getElementById('filter-topic');     ft.innerHTML='';
+  const fst=document.getElementById('filter-subtopic'); fst.innerHTML='';
+  const fd=document.getElementById('filter-diff');      fd.innerHTML='';
+  const fs=document.getElementById('filter-status');    fs.innerHTML='';
+
+  exams.forEach(e=>makeTag(fe,'exam',e,ec[e]||''));
+  topics.forEach(t=>makeTag(ft,'topic',t,''));
+  // Sub Topics: only show subtopics that belong to currently selected topics (or all if no topic filter)
+  const visibleSubtopics=state.filters.topic.size>0
+    ? [...new Set(state.allQuestions.filter(q=>state.filters.topic.has(q.topic)&&q.subtopic).map(q=>q.subtopic))].sort()
+    : getMetadata().subtopics;
+  visibleSubtopics.forEach(s=>makeTag(fst,'subtopic',s,''));
+  diffs.forEach(d=>makeTag(fd,'diff',d,dc[d]||''));
+  // Status: store & filter by lowercase, display capitalized
+  statuses.forEach(s=>{
+    const lower=s.toLowerCase();
+    const span=document.createElement('span');
+    span.className='tag'+(state.filters.status.has(lower)?' active':'');
+    span.textContent=s;
+    span.addEventListener('click',()=>toggleFilter('status',lower));
+    fs.appendChild(span);
+  });
+}
+
+function renderActiveFilterChips(){
+  const bar=document.getElementById('active-filter-bar');
+  if(!bar)return;
+  bar.innerHTML='';
+  const typeLabels={exam:'Exam',topic:'Topic',subtopic:'Sub Topic',diff:'Difficulty',status:'Status'};
+  const typeCls={exam:'chip-exam',topic:'chip-topic',subtopic:'chip-topic',diff:'chip-diff',status:'chip-status'};
+  let hasAny=false;
+  for(const[type,set] of Object.entries(state.filters)){
+    for(const val of set){
+      hasAny=true;
+      const chip=document.createElement('span');
+      chip.className='active-chip '+(typeCls[type]||'');
+      const label=val.charAt(0).toUpperCase()+val.slice(1);
+      chip.innerHTML=`<span style="opacity:0.6;font-size:9px">${typeLabels[type]||type}:</span> ${label} <span class="chip-x">×</span>`;
+      chip.querySelector('.chip-x').addEventListener('click',()=>toggleFilter(type,val));
+      bar.appendChild(chip);
+    }
+  }
+}
+
+function toggleFilter(type,val){
+  const s=state.filters[type];
+  s.has(val)?s.delete(val):s.add(val);
+  applyFilters();renderFilterTags();renderMetaGrid();renderActiveFilterChips();
+}
+function clearFilters(){
+  Object.values(state.filters).forEach(s=>s.clear());
+  applyFilters();renderFilterTags();renderActiveFilterChips();
+}
+
+function applyFilters(){
+  let qs=[...state.allQuestions];
+  if(state.filters.exam.size)  qs=qs.filter(q=>q.exams.some(e=>state.filters.exam.has(e)));
+  if(state.filters.topic.size)    qs=qs.filter(q=>state.filters.topic.has(q.topic));
+  if(state.filters.subtopic.size) qs=qs.filter(q=>state.filters.subtopic.has(q.subtopic));
+  if(state.filters.diff.size)  qs=qs.filter(q=>state.filters.diff.has(q.difficulty));
+  if(state.filters.status.size)qs=qs.filter(q=>state.filters.status.has(state.answers[q.id]?.status||'unanswered'));
+  state.filteredQuestions=qs;
+  document.getElementById('filtered-count').textContent=qs.length;
+}
+
+function updateDashboard(){
+  const total=state.allQuestions.length;
+  const correct=Object.values(state.answers).filter(a=>a.status==='correct').length;
+  const wrong=Object.values(state.answers).filter(a=>a.status==='wrong').length;
+  const skipped=Object.values(state.answers).filter(a=>a.status==='skipped').length;
+  const review=Object.values(state.answers).filter(a=>a.status==='review').length;
+  const attempted=correct+wrong;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-attempted').textContent=attempted;
+  document.getElementById('stat-correct').textContent=correct;
+  document.getElementById('stat-wrong').textContent=wrong;
+  document.getElementById('stat-skipped').textContent=skipped;
+  document.getElementById('stat-review').textContent=review;
+  renderExamProgressBars();renderMetaGrid();renderFilterTags();renderActiveFilterChips();applyFilters();
+}
+
+function renderExamProgressBars(){
+  const{exams}=getMetadata();
+  const colors={Core:'var(--accent)',DataEngineer:'var(--accent2)',Architect:'var(--accent5)',DataAnalyst:'var(--correct)'};
+  document.getElementById('exam-progress-bars').innerHTML=exams.map(exam=>{
+    const total=state.allQuestions.filter(q=>q.exams.includes(exam)).length;
+    const correct=state.allQuestions.filter(q=>q.exams.includes(exam)&&state.answers[q.id]?.status==='correct').length;
+    const pct=total>0?Math.round(correct/total*100):0;
+    return`<div class="progress-item"><div class="progress-header"><span class="progress-name">SnowPro ${exam}</span><span class="progress-pct">${correct}/${total} · ${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${colors[exam]||'var(--accent)'}"></div></div></div>`;
+  }).join('');
+}
+
+function renderMetaGrid(){
+  const{exams,topics,diffs}=getMetadata();
+  const sub=new Set();state.allQuestions.forEach(q=>{if(q.subtopic)sub.add(q.subtopic);});
+  document.getElementById('meta-grid').innerHTML=`
+    <div class="meta-card"><div class="meta-card-title">Exams (${exams.length})</div><div class="tag-list">${exams.map(e=>`<span class="tag">${e}</span>`).join('')}</div></div>
+    <div class="meta-card"><div class="meta-card-title">Topics (${topics.length})</div><div class="tag-list">${topics.map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
+    <div class="meta-card"><div class="meta-card-title">Sub Topics (${sub.size})</div><div class="tag-list">${[...sub].map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
+    <div class="meta-card"><div class="meta-card-title">Difficulty</div><div class="tag-list"><span class="tag diff-easy">Easy</span><span class="tag diff-medium">Medium</span><span class="tag diff-hard">Hard</span></div></div>`;
+}
+
+function startExam(){
+  if(!state.filteredQuestions.length){showNotif('No questions match filters. Load YAML files first!','error');return;}
+  // Use filteredQuestions as-is (shuffle button may have already reordered them)
+  state.session=[...state.filteredQuestions];
+  // Store which filters were active at exam start (for summary display)
+  state.sessionFilters={};
+  for(const[type,set] of Object.entries(state.filters)){
+    if(set.size) state.sessionFilters[type]=[...set];
+  }
+  state.sessionIndex=0;
+  state.qFilter='all';
+  // Reset shuffle button
+  const btn=document.getElementById('btn-shuffle');
+  if(btn){btn.classList.remove('shuffled');btn.textContent='⇌ Shuffle Order';}
+  state._shuffled=false;
+  showView('exam');
+  renderQuestion();
+  updateSidebar();
+}
+function shuffleQuestions(){
+  if(!state.filteredQuestions.length){showNotif('Load YAML files first!','error');return;}
+  // Shuffle filteredQuestions in place
+  const arr=state.filteredQuestions;
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  // Also shuffle options within each question
+  state.filteredQuestions=arr.map(q=>({...q,options:[...q.options].sort(()=>Math.random()-0.5)}));
+  state._shuffled=true;
+  // Visual feedback on button
+  const btn=document.getElementById('btn-shuffle');
+  if(btn){btn.classList.add('shuffled');btn.textContent='⇌ Shuffled ✓';}
+  showNotif('Order shuffled! Click Start Exam to begin.','success');
+}
+
+function renderQuestion(){
+  const q=state.session[state.sessionIndex];
+  if(!q)return;
+  const idx=state.sessionIndex,total=state.session.length;
+  document.getElementById('q-counter').textContent=`Q ${idx+1} of ${total}`;
+  document.getElementById('exam-prog-fill').style.width=(idx/total*100)+'%';
+
+  const ans=state.answers[q.id];
+  const isAnswered=ans&&(ans.status==='correct'||ans.status==='wrong');
+  const isReview=ans?.status==='review';
+  const isMulti=q.isMulti||false;
+  const correctLetters=q.correctLetters||[q.correctLetter].filter(Boolean);
+  // selectedLetters: Set for multi, single string for single
+  const selectedSet=new Set(Array.isArray(ans?.selected)?ans.selected:(ans?.selected?[ans.selected]:[]));
+
+  const dc={easy:'badge-diff-easy',medium:'badge-diff-medium',hard:'badge-diff-hard'}[q.difficulty.toLowerCase()]||'badge-diff-medium';
+
+  // Build options HTML
+  const optHtml=q.options.map(opt=>{
+    const isCorrect=correctLetters.includes(opt.letter);
+    const isSelected=selectedSet.has(opt.letter);
+    let cls='';
+    if(isMulti) cls='multi-mode ';
+    if(isAnswered){
+      if(isCorrect && isSelected) cls+='correct';
+      else if(!isCorrect && isSelected) cls+='wrong';   // wrong selection
+      else if(isCorrect && !isSelected) cls+='missed';  // correct but not selected
+    } else if(isSelected){
+      cls+='selected';
+    }
+    return`<button class="option-btn ${cls}" onclick="selectOption('${opt.letter}',this)" ${isAnswered?'disabled':''}><span class="opt-letter">${opt.letter}</span><span>${opt.text}</span></button>`;
+  }).join('');
+
+  // Multi-select hint
+  const multiHint=isMulti?`<div class="multi-hint">☑ Select all that apply — ${correctLetters.length} correct answers</div>`:'';
+
+  // Result banner after submit
+  let bannerHtml='';
+  if(isAnswered){
+    const ok=ans.status==='correct';
+    const correctTexts=correctLetters.map(l=>{const o=q.options.find(x=>x.letter===l);return`<strong>${l}</strong>${o?' — '+o.text.slice(0,50):''}`;}).join('<br>');
+    if(isMulti){
+      // Show how many they got right
+      const numCorrectSelected=correctLetters.filter(l=>selectedSet.has(l)).length;
+      const pct=Math.round(numCorrectSelected/correctLetters.length*100);
+      bannerHtml=`<div class="result-banner ${ok?'ok':'ng'} show">
+        <div class="result-icon">${ok?'✅':'❌'}</div>
+        <div style="flex:1">
+          <div class="result-text">${ok?'All correct!':'Partially correct ('+numCorrectSelected+'/'+correctLetters.length+')'}</div>
+          ${!ok?`<div class="result-correct-ans" style="margin-top:6px">Correct answers:<br>${correctTexts}</div>
+          <div class="partial-bar-wrap"><div class="partial-bar"><div class="partial-bar-fill" style="width:${pct}%;background:${pct===100?'var(--correct)':pct>=50?'var(--skipped)':'var(--wrong)'}"></div></div></div>`:''}
+        </div>
+      </div>`;
+    } else {
+      const co=q.options.find(o=>o.letter===correctLetters[0]);
+      bannerHtml=`<div class="result-banner ${ok?'ok':'ng'} show">
+        <div class="result-icon">${ok?'✅':'❌'}</div>
+        <div><div class="result-text">${ok?'Correct!':'Incorrect!'}</div>
+        ${!ok?`<div class="result-correct-ans">Correct: <strong>${correctLetters[0]}</strong> — ${co?.text||''}</div>`:''}</div>
+      </div>`;
+    }
+  }
+
+  // Build question card (no explanation inside)
+  document.getElementById('q-card-container').innerHTML=`
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-badge badge-num">Q${q.no}</span>
+        <span class="q-badge ${dc}">${q.difficulty}</span>
+        ${isMulti?'<span class="q-badge badge-multi">Multi-Select</span>':''}
+        ${q.exams.map(e=>`<span class="q-badge badge-exam">${e}</span>`).join('')}
+        ${q.topic?`<span class="q-badge badge-topic">${q.topic}</span>`:''}
+        ${q.subtopic?`<span class="q-badge badge-topic">${q.subtopic}</span>`:''}
+        ${isReview?`<span class="q-badge badge-review-tag">⚑ Review</span>`:''}
+      </div>
+      <div class="q-text">${q.question}</div>
+      ${multiHint}
+      <div class="options-list">${optHtml}</div>
+      ${bannerHtml}
+    </div>`;
+
+  // Action buttons
+  const btnSubmit=document.getElementById('btn-submit');
+  const btnNext=document.getElementById('btn-next');
+  const btnPrev=document.getElementById('btn-prev');
+  document.getElementById('btn-review').textContent=isReview?'⚑ Unmark':'⚑ Review';
+
+  const hasSelection=selectedSet.size>0;
+  if(isAnswered){
+    btnSubmit.disabled=true;
+    btnSubmit.style.opacity='0.35';
+    btnNext.disabled=false;
+    btnNext.style.opacity='1';
+  } else {
+    btnSubmit.disabled=!hasSelection;
+    btnSubmit.style.opacity=hasSelection?'1':'0.45';
+    btnNext.disabled=false;
+    btnNext.style.opacity='1';
+  }
+  btnPrev.style.display=idx>0?'inline-flex':'none';
+
+  // Update submit button label for multi-select
+  if(!isAnswered){
+    btnSubmit.textContent=isMulti&&hasSelection?`✔ Submit (${selectedSet.size} selected)`:'✔ Submit Answer';
+  } else {
+    btnSubmit.textContent='✔ Submit Answer';
+  }
+
+  // Explanation outside card
+  const expEl=document.getElementById('explanation-outside');
+  const expText=document.getElementById('explanation-text');
+  if(expEl&&expText){
+    if(isAnswered&&q.explanation){
+      expText.textContent=q.explanation;
+      expEl.classList.add('show');
+    } else {
+      expEl.classList.remove('show');
+      expText.textContent='';
+    }
+  }
+
+  updateNavDots();
+}
+
+function selectOption(letter,el){
+  const q=state.session[state.sessionIndex];
+  const ans=state.answers[q.id];
+  if(ans&&(ans.status==='correct'||ans.status==='wrong'))return;
+  if(!state.answers[q.id])state.answers[q.id]={status:'unanswered',selected:null};
+
+  if(q.isMulti){
+    // Multi-select: toggle the clicked option in a Set stored as array
+    let sel=new Set(Array.isArray(ans?.selected)?ans.selected:[]);
+    if(sel.has(letter)) sel.delete(letter);
+    else sel.add(letter);
+    state.answers[q.id].selected=[...sel];
+    // Update visual state of all option buttons
+    document.querySelectorAll('.option-btn').forEach(b=>{
+      const bLetter=b.querySelector('.opt-letter')?.textContent?.trim();
+      if(bLetter) b.classList.toggle('selected', sel.has(bLetter));
+    });
+    // Update submit button label with count
+    const btnS=document.getElementById('btn-submit');
+    if(btnS){
+      const count=sel.size;
+      btnS.disabled=count===0;
+      btnS.style.opacity=count>0?'1':'0.45';
+      btnS.textContent=count>0?`✔ Submit (${count} selected)`:'✔ Submit Answer';
+    }
+  } else {
+    // Single-select: replace selection
+    state.answers[q.id].selected=letter;
+    document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
+    el.classList.add('selected');
+    const btnS=document.getElementById('btn-submit');
+    if(btnS){btnS.disabled=false;btnS.style.opacity='1';btnS.textContent='✔ Submit Answer';}
+  }
+}
+
+function submitAnswer(){
+  const q=state.session[state.sessionIndex];
+  const ans=state.answers[q.id];
+  const sel=ans?.selected;
+  if(!sel||(Array.isArray(sel)&&sel.length===0))return;
+
+  const correctLetters=q.correctLetters||[q.correctLetter].filter(Boolean);
+  let isCorrect=false;
+
+  if(q.isMulti){
+    // Multi-select: must match exactly — same set of letters
+    const selSet=new Set(Array.isArray(sel)?sel:[sel]);
+    const corrSet=new Set(correctLetters);
+    isCorrect=selSet.size===corrSet.size&&[...corrSet].every(l=>selSet.has(l));
+  } else {
+    isCorrect=(Array.isArray(sel)?sel[0]:sel)===correctLetters[0];
+  }
+
+  state.answers[q.id].status=isCorrect?'correct':'wrong';
+
+  // Pulse animation on dashboard stat card
+  const pid=isCorrect?'stat-correct':'stat-wrong';
+  const pel=document.getElementById(pid);
+  if(pel){pel.classList.remove('pop-anim');void pel.offsetWidth;pel.classList.add('pop-anim');}
+
+  renderQuestion();
+  updateDashboard();
+  updateSidebar();
+}
+
+function skipQuestion(){
+  const q=state.session[state.sessionIndex];
+  const ans=state.answers[q.id];
+  if(!ans||ans.status==='unanswered'||ans.status==='review'){
+    state.answers[q.id]={status:'skipped',selected:ans?.selected||null};
+  }
+  updateDashboard();updateSidebar();nextQuestion();
+}
+
+function markReview(){
+  const q=state.session[state.sessionIndex];
+  if(!state.answers[q.id])state.answers[q.id]={status:'unanswered',selected:null};
+  const cur=state.answers[q.id].status;
+  if(cur==='correct'||cur==='wrong')return; // can't override a submitted answer
+  if(cur==='review'){
+    // unmark: go back to unanswered (keep any selected option)
+    state.answers[q.id].status='unanswered';
+    showNotif('Removed from review','info');
+  } else {
+    // mark for review — can still click Next to skip to next Q
+    state.answers[q.id].status='review';
+    showNotif('Marked for review — click Next to continue','info');
+  }
+  renderQuestion();updateDashboard();updateSidebar();
+}
+
+function nextQuestion(){
+  // If user clicks Next without answering, auto-mark as skipped
+  const q=state.session[state.sessionIndex];
+  if(q){
+    const ans=state.answers[q.id];
+    const status=ans?.status||'unanswered';
+    if(status==='unanswered'){
+      // Only auto-skip if truly unanswered (not marked for review)
+      const prevSel=ans?.selected;
+      const hasSel=Array.isArray(prevSel)?prevSel.length>0:!!prevSel;
+      state.answers[q.id]={status:'skipped',selected:hasSel?prevSel:null};
+      updateDashboard();updateSidebar();
+    }
+    // If status is 'review', leave it as-is — user intentionally marked it
+  }
+  if(state.sessionIndex<state.session.length-1){state.sessionIndex++;renderQuestion();}
+  else finishExam();
+}
+function prevQuestion(){if(state.sessionIndex>0){state.sessionIndex--;renderQuestion();}}
+
+function jumpToQuestion(idx){state.sessionIndex=idx;showView('exam');renderQuestion();updateSidebar();}
+
+function updateSidebar(){
+  const sess=state.session,total=sess.length;
+  const correct=sess.filter(q=>state.answers[q.id]?.status==='correct').length;
+  const wrong=sess.filter(q=>state.answers[q.id]?.status==='wrong').length;
+  const skipped=sess.filter(q=>state.answers[q.id]?.status==='skipped').length;
+  const review=sess.filter(q=>state.answers[q.id]?.status==='review').length;
+  const attempted=correct+wrong;
+  const remaining=total-correct-wrong-skipped-review;
+  const pct=attempted>0?Math.round(correct/attempted*100):0;
+
+  const circ=263.89;
+  const rp=document.getElementById('ring-path');
+  rp.style.strokeDashoffset=circ-(pct/100*circ);
+  rp.style.stroke=pct>=70?'var(--correct)':pct>=40?'var(--skipped)':'var(--wrong)';
+  document.getElementById('ring-pct').textContent=pct+'%';
+
+  const p=n=>total>0?(n/total*100).toFixed(1)+'%':'0%';
+  document.getElementById('seg-correct').style.width=p(correct);
+  document.getElementById('seg-wrong').style.width=p(wrong);
+  document.getElementById('seg-skipped').style.width=p(skipped);
+  document.getElementById('seg-review').style.width=p(review);
+
+  const set=(id,val,of_)=>{
+    document.getElementById(id).textContent=val;
+    document.getElementById(id+'-of').textContent='/'+of_;
+  };
+  set('ms-correct',correct,total);
+  set('ms-wrong',wrong,total);
+  set('ms-skipped',skipped,total);
+  set('ms-review',review,total);
+  set('ms-remaining',remaining,total);
+
+  updateNavDots();
+}
+
+function setQFilter(filter){
+  state.qFilter=filter;
+  // update button active states
+  document.querySelectorAll('.q-type-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.filter===filter);
+  });
+  updateNavDots();
+}
+
+function updateNavDots(){
+  const sess=state.session,idx=state.sessionIndex;
+  const filter=state.qFilter||'all';
+  const dotsEl=document.getElementById('q-nav-dots');
+  const emptyEl=document.getElementById('q-filter-empty');
+
+  const dots=sess.map((q,i)=>{
+    const ans=state.answers[q.id];
+    const status=ans?.status||'unanswered';
+    // apply filter
+    if(filter!=='all' && status!==filter) return null;
+    const cls=i===idx?'current':{correct:'d-correct',wrong:'d-wrong',skipped:'d-skipped',review:'d-review'}[status]||'';
+    const div=document.createElement('div');
+    div.className='q-dot '+cls;
+    div.textContent=i+1;
+    div.title='Q'+(i+1)+' — '+status;
+    div.addEventListener('click',()=>jumpToQuestion(i));
+    return div;
+  }).filter(Boolean);
+
+  dotsEl.innerHTML='';
+  dots.forEach(d=>dotsEl.appendChild(d));
+  if(emptyEl) emptyEl.style.display=dots.length===0?'block':'none';
+}
+
+function finishExam(){updateDashboard();renderSummary();showView('summary');}
+
+function renderSummary(){
+  const sess=state.session;if(!sess.length)return;
+  const correct=sess.filter(q=>state.answers[q.id]?.status==='correct').length;
+  const wrong=sess.filter(q=>state.answers[q.id]?.status==='wrong').length;
+  const skipped=sess.filter(q=>state.answers[q.id]?.status==='skipped').length;
+  const review=sess.filter(q=>state.answers[q.id]?.status==='review').length;
+  const total=sess.length,attempted=correct+wrong;
+  const pct=attempted>0?Math.round(correct/attempted*100):0;
+
+  document.getElementById('sum-pct').textContent=pct+'%';
+  const totalKB=state.allQuestions.length;
+  const filteredNote=total<totalKB?` (filtered from ${totalKB} total)`:'';
+  document.getElementById('sum-label').textContent=`${correct} correct / ${attempted} attempted · ${total} questions in session${filteredNote}`;
+
+  // Show active filter notice if filters were applied at session start
+  const sf=state.sessionFilters||{};
+  const hasFilters=Object.values(sf).some(a=>a&&a.length>0);
+  const notice=document.getElementById('sum-filter-notice');
+  const chipsEl=document.getElementById('sum-filter-chips');
+  if(notice&&chipsEl){
+    if(hasFilters){
+      notice.style.display='block';
+      const typeLabels={exam:'Exam',topic:'Topic',subtopic:'Sub Topic',diff:'Difficulty',status:'Status'};
+      const typeCls={exam:'chip-exam',topic:'chip-topic',subtopic:'chip-topic',diff:'chip-diff',status:'chip-status'};
+      chipsEl.innerHTML='';
+      for(const[type,vals] of Object.entries(sf)){
+        (vals||[]).forEach(val=>{
+          const chip=document.createElement('span');
+          chip.className='active-chip '+(typeCls[type]||'');
+          chip.innerHTML=`<span style="opacity:0.6;font-size:9px">${typeLabels[type]||type}:</span> ${val.charAt(0).toUpperCase()+val.slice(1)}`;
+          chipsEl.appendChild(chip);
+        });
+      }
+    } else {
+      notice.style.display='none';
+    }
+  }
+  document.getElementById('sum-stats').innerHTML=[['c-correct','Correct',correct],['c-wrong','Wrong',wrong],['c-skipped','Skipped',skipped],['c-review','For Review',review]].map(([cls,lbl,val])=>
+    `<div class="stat-card ${cls}" style="padding:10px 18px;min-width:90px;text-align:center"><div class="stat-val" style="font-size:22px">${val}</div><div class="stat-label">${lbl}</div></div>`
+  ).join('');
+
+  const sc={correct:'#4ade80',wrong:'#ff6b6b',skipped:'#fbbf24',review:'#a78bfa',unanswered:'#5a72a0'};
+  const sl={correct:'✓ Correct',wrong:'✗ Wrong',skipped:'→ Skipped',review:'⚑ Review',unanswered:'— Unanswered'};
+  const dc={easy:'badge-diff-easy',medium:'badge-diff-medium',hard:'badge-diff-hard'};
+
+  document.getElementById('review-table-body').innerHTML=sess.map((q,i)=>{
+    const ans=state.answers[q.id];
+    const status=ans?.status||'unanswered';
+    const color=sc[status]||'#5a72a0';
+    const label=sl[status]||'—';
+    const d=dc[q.difficulty?.toLowerCase()]||'';
+    const co=q.options.find(o=>o.letter===q.correctLetter);
+    return`<tr onclick="jumpToQuestion(${i})" title="Go to Q${i+1}">
+      <td style="font-family:'Space Mono',monospace;color:var(--text3)">${i+1}</td>
+      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.question}</td>
+      <td style="color:var(--text2);font-size:11px;white-space:nowrap">${q.topic}</td>
+      <td><span class="q-badge ${d}">${q.difficulty}</span></td>
+      <td><span class="status-dot" style="background:${color}"></span><span style="color:${color};font-size:11px">${label}</span></td>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text2)">${(()=>{const s=ans?.selected;if(!s||(Array.isArray(s)&&s.length===0))return'—';return Array.isArray(s)?s.map(l=>'Opt '+l).join(', '):'Opt '+s;})()}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--correct)">${(q.correctLetters||[q.correctLetter]).filter(Boolean).join(', ')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showView(name){
+  ['dashboard','exam','summary'].forEach(v=>document.getElementById(`view-${v}`).style.display=v===name?'block':'none');
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['dashboard','exam','summary'][i]===name));
+  if(name==='summary')renderSummary();
+}
+
+function toggleResetMenu(){
+  const menu=document.getElementById('reset-menu');
+  if(!menu)return;
+  const isOpen=menu.style.display==='block';
+  menu.style.display=isOpen?'none':'block';
+  // close on outside click
+  if(!isOpen){
+    setTimeout(()=>{
+      document.addEventListener('click',function closeMenu(e){
+        if(!menu.contains(e.target)&&e.target.id!=='btn-reset-toggle'){
+          menu.style.display='none';
+        }
+        document.removeEventListener('click',closeMenu);
+      });
+    },0);
+  }
+}
+
+function _applyReset(){
+  // Common UI reset tasks after any reset type
+  updateDashboard();
+  showView('dashboard');
+  document.getElementById('sum-pct').textContent='—';
+  document.getElementById('sum-label').textContent='Complete an exam to see results';
+  document.getElementById('sum-stats').innerHTML='';
+  document.getElementById('review-table-body').innerHTML='';
+  document.getElementById('sum-filter-notice').style.display='none';
+  const rp=document.getElementById('ring-path');
+  if(rp){rp.style.strokeDashoffset='263.89';rp.style.stroke='var(--correct)';}
+  const rpt=document.getElementById('ring-pct');
+  if(rpt) rpt.textContent='0%';
+  // Hide reset menu
+  const menu=document.getElementById('reset-menu');
+  if(menu) menu.style.display='none';
+}
+
+function doSoftReset(){
+  // Clear progress only — keep loaded files and questions
+  state.answers={};
+  state.session=[];
+  state.sessionIndex=0;
+  state.sessionFilters={};
+  state._shuffled=false;
+  const btn=document.getElementById('btn-shuffle');
+  if(btn){btn.classList.remove('shuffled');btn.textContent='⇌ Shuffle Order';}
+  _applyReset();
+  showNotif('✓ Progress cleared — files still loaded','success');
+}
+
+function doFullReset(){
+  // Wipe everything including loaded files
+  state.allQuestions=[];
+  state.filteredQuestions=[];
+  state.loadedFiles=[];
+  state.answers={};
+  state.session=[];
+  state.sessionIndex=0;
+  state.sessionFilters={};
+  state._shuffled=false;
+  Object.values(state.filters).forEach(s=>s.clear());
+  document.getElementById('files-list').innerHTML='';
+  const btn=document.getElementById('btn-shuffle');
+  if(btn){btn.classList.remove('shuffled');btn.textContent='⇌ Shuffle Order';}
+  _applyReset();
+  showNotif('✓ Full reset complete — reload YAML files to start fresh','info');
+}
+
+function showNotif(msg,type='info'){
+  const el=document.getElementById('notif');
+  el.textContent=msg;el.className=`show ${type}`;
+  clearTimeout(el._t);el._t=setTimeout(()=>{el.className='';},3000);
+}
+
+showView('dashboard');
+updateDashboard();
+</script>
+</body>
+</html>

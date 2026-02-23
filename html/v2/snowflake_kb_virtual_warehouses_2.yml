@@ -1,0 +1,498 @@
+Topic Name: Virtual Warehouses
+Sub Topic Name: Warehouse Fundamentals, Warehouse Sizing, Warehouse Scaling, Warehouse Management
+Total Question Count: 20
+
+all questions:
+
+  - Question No: "001"
+    question: What is a Snowflake Virtual Warehouse?
+    their options:
+      option A: A physical server cluster managed by Snowflake
+      option B: A named abstraction for a cluster of compute resources used to execute SQL queries
+      option C: A storage layer that holds structured and semi-structured data
+      option D: A database object that stores virtual tables
+      option E: A cloud provider-specific VM instance group
+    correct Answer: option B
+    explanation: >
+      A Snowflake Virtual Warehouse is a named abstraction representing a cluster of compute resources 
+      (CPU, memory, temporary storage) used to execute SQL DML operations like queries, loads, and DML statements. 
+      It is completely separate from storage in Snowflake's unique architecture. You can have multiple warehouses 
+      running simultaneously, each processing different workloads without contention. They are billed per second 
+      of active usage (minimum 60 seconds) and can be suspended when idle to stop costs.
+    difficulty level: Easy
+    topic: Virtual Warehouses
+    sub topic: Warehouse Fundamentals
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "002"
+    question: Which of the following warehouse sizes will have DOUBLE the compute credits per hour compared to a MEDIUM warehouse?
+    their options:
+      option A: X-Small
+      option B: Small
+      option C: Large
+      option D: X-Large
+      option E: 2X-Large
+    correct Answer: option C
+    explanation: >
+      Snowflake warehouse sizes double in compute credits at each step: X-Small=1, Small=2, Medium=4, Large=8, 
+      X-Large=16, 2X-Large=32, 3X-Large=64, 4X-Large=128 credits/hour. Therefore, a LARGE warehouse consumes 
+      8 credits/hour which is exactly double the MEDIUM warehouse's 4 credits/hour. When you scale up a warehouse 
+      by one size, you double the number of servers in the cluster, which doubles performance for large, 
+      complex queries and doubles the cost.
+    difficulty level: Easy
+    topic: Virtual Warehouses
+    sub topic: Warehouse Sizing
+    exam: Core, DataEngineer, DataAnalyst
+
+  - Question No: "003"
+    question: What is the key difference between Scaling Up and Scaling Out in Snowflake warehouses?
+    their options:
+      option A: Scaling Up increases the number of clusters; Scaling Out increases the warehouse size
+      option B: Scaling Up increases warehouse size for better per-query performance; Scaling Out adds clusters to handle concurrency
+      option C: Scaling Up is automatic; Scaling Out is manual only
+      option D: Scaling Up applies to Standard tier; Scaling Out to Enterprise tier
+      option E: There is no difference; both terms refer to the same operation
+    correct Answer: option B
+    explanation: >
+      Scaling Up (vertical scaling) means increasing the warehouse size (e.g., Medium → Large), which provides 
+      more compute power per query — helpful for complex, long-running queries. Scaling Out (horizontal scaling) 
+      means enabling Multi-Cluster Warehouses which adds additional clusters to handle more concurrent users/queries. 
+      Use Scale Up when queries are slow due to insufficient compute. Use Scale Out when queries are queuing due 
+      to too many concurrent users. Multi-Cluster Warehouses require Enterprise edition or higher.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Scaling
+    exam: Core, Architect, DataEngineer
+
+  - Question No: "004"
+    question: A company has 200 concurrent BI users who run short, fast queries. Which warehouse configuration would BEST address query queuing issues?
+    their options:
+      option A: Single X-Large warehouse
+      option B: Single 4X-Large warehouse
+      option C: Multi-Cluster Warehouse with auto-scaling enabled
+      option D: Multiple separate single-cluster warehouses manually managed
+      option E: Increase the statement timeout parameter
+    correct Answer: option C
+    explanation: >
+      For high concurrency with many users running simultaneous queries, a Multi-Cluster Warehouse (MCW) with 
+      auto-scaling is the best solution. MCW automatically adds and removes clusters based on concurrency demand. 
+      This is a horizontal scaling approach ideal when queries are queuing (not slow). A single large warehouse 
+      won't solve concurrency — it only helps query speed. Manual management is operationally complex. 
+      MCW requires Enterprise edition and is the recommended Snowflake pattern for concurrent BI workloads.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Scaling
+    exam: Core, Architect, DataAnalyst
+
+  - Question No: "005"
+    question: What happens to temporary tables and query results cache when a Virtual Warehouse is suspended?
+    their options:
+      option A: Both are retained for 24 hours
+      option B: Temporary tables are dropped; query results cache is retained in cloud services layer
+      option C: Both are immediately dropped
+      option D: Temporary tables are promoted to permanent tables; cache is dropped
+      option E: Both are archived to the storage layer automatically
+    correct Answer: option B
+    explanation: >
+      When a Virtual Warehouse is suspended: (1) Temporary tables that exist WITHIN that warehouse session 
+      are dropped because they are tied to the session/warehouse lifecycle. (2) The Query Results Cache is 
+      maintained in the Cloud Services Layer (not the warehouse), so it persists for 24 hours regardless of 
+      warehouse state. This is an important architectural distinction — Snowflake's 3-layer architecture 
+      (Storage, Compute, Cloud Services) means the results cache survives warehouse suspension, enabling 
+      cost savings without always recomputing the same queries.
+    difficulty level: Hard
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "006"
+    question: Which parameter controls how long a warehouse waits before automatically suspending when idle?
+    their options:
+      option A: AUTO_SUSPEND_TIMEOUT
+      option B: IDLE_TIMEOUT_SECONDS
+      option C: AUTO_SUSPEND (in seconds)
+      option D: WAREHOUSE_TIMEOUT
+      option E: SUSPEND_AFTER_IDLE
+    correct Answer: option C
+    explanation: >
+      The AUTO_SUSPEND parameter specifies the number of seconds of inactivity after which the warehouse 
+      automatically suspends. The minimum value is 60 seconds (1 minute) and the default is 600 seconds 
+      (10 minutes). Setting AUTO_SUSPEND = NULL or 0 disables auto-suspend. Best practice is to enable 
+      AUTO_SUSPEND to reduce costs. For interactive workloads, a shorter timeout (60-120 seconds) is 
+      recommended. For batch workloads, a longer timeout may be appropriate to avoid the restart penalty. 
+      This works together with AUTO_RESUME which automatically restarts the warehouse when a query is submitted.
+    difficulty level: Easy
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Core, DataEngineer
+
+  - Question No: "007"
+    question: In a Multi-Cluster Warehouse, what is the difference between 'Maximized' and 'Auto-Scale' mode?
+    their options:
+      option A: Maximized runs all clusters at all times; Auto-Scale dynamically adds/removes clusters based on demand
+      option B: Maximized is for batch jobs; Auto-Scale is for streaming
+      option C: Maximized supports more concurrent queries; Auto-Scale supports larger individual queries
+      option D: Maximized requires Enterprise; Auto-Scale works on Standard edition
+      option E: There is no functional difference between the two modes
+    correct Answer: option A
+    explanation: >
+      Multi-Cluster Warehouses have two operating modes: (1) Maximized mode — All clusters specified by MAX_CLUSTER_COUNT 
+      run at all times. Best when you need consistent, maximum concurrency (e.g., peak business hours all day). 
+      More expensive but zero cold-start latency. (2) Auto-Scale mode — Snowflake automatically starts additional 
+      clusters when demand increases and shuts them down when demand decreases, based on the SCALING_POLICY 
+      (Economy vs Standard). More cost-efficient for variable workloads. Standard policy minimizes queuing; 
+      Economy policy conserves credits by fully loading existing clusters before adding new ones.
+    difficulty level: Hard
+    topic: Virtual Warehouses
+    sub topic: Warehouse Scaling
+    exam: Architect, DataEngineer
+
+  - Question No: "008"
+    question: What is the minimum billing duration each time a Snowflake virtual warehouse is started or resumed?
+    their options:
+      option A: 30 seconds
+      option B: 60 seconds (1 minute)
+      option C: 5 minutes
+      option D: 15 minutes
+      option E: 1 hour
+    correct Answer: option B
+    explanation: >
+      Snowflake bills a minimum of 60 seconds (1 minute) each time a warehouse starts or resumes from suspension. 
+      After the first 60 seconds, billing is per-second. This means if you suspend and resume a warehouse 
+      frequently, you may accumulate more charges than expected. For example, resuming a warehouse 10 times 
+      in an hour, each for 10 seconds of actual work, still results in 10 minutes of billed time. 
+      This is an important cost management consideration — for workloads with frequent short bursts, 
+      keeping the warehouse running with a longer AUTO_SUSPEND may be more economical.
+    difficulty level: Easy
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Core, DataEngineer, DataAnalyst
+
+  - Question No: "009"
+    question: Which Snowflake feature allows a single warehouse to be shared by multiple teams with different resource needs without interference?
+    their options:
+      option A: Multi-Cluster Warehouses
+      option B: Resource Monitors
+      option C: Query Tags
+      option D: Warehouse Resource Groups (WRGs)
+      option E: Separate warehouses per team is the only option
+    correct Answer: option A
+    explanation: >
+      Multi-Cluster Warehouses allow multiple clusters to run under a single warehouse name. Different 
+      teams can submit queries to the same warehouse, and Snowflake automatically distributes the load 
+      across clusters. However, the more common recommended pattern is to create SEPARATE warehouses per 
+      team/workload type (ETL warehouse, BI warehouse, Data Science warehouse) to provide better cost 
+      attribution, resource isolation, and independent sizing. Resource Monitors can be applied per warehouse 
+      to set credit limits and alerts. This is a nuanced question — MCW handles concurrency within one 
+      warehouse, while separate warehouses provide true isolation.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Architect, Core
+
+  - Question No: "010"
+    question: What does the STATEMENT_QUEUED_TIMEOUT_IN_SECONDS parameter control?
+    their options:
+      option A: How long a query runs before being killed
+      option B: How long a query waits in the queue before being cancelled
+      option C: How long the warehouse waits before suspending
+      option D: The timeout for DDL statements only
+      option E: How long a transaction can remain open
+    correct Answer: option B
+    explanation: >
+      STATEMENT_QUEUED_TIMEOUT_IN_SECONDS defines the maximum time (in seconds) a SQL statement can wait 
+      in the warehouse queue before it is automatically cancelled. If a query cannot start execution within 
+      this time (because the warehouse is fully loaded), Snowflake cancels it and returns an error. 
+      This is different from STATEMENT_TIMEOUT_IN_SECONDS which limits how long a RUNNING query can execute. 
+      Default is 0 (no timeout — queries wait indefinitely). Setting this parameter helps prevent 
+      cascading failures in high-concurrency environments where queries might queue for very long periods.
+    difficulty level: Hard
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: DataEngineer, Architect
+
+  - Question No: "011"
+    question: A Snowflake warehouse is sized at X-Large. An analyst changes it to 2X-Large. What is the expected impact?
+    their options:
+      option A: Query concurrency doubles
+      option B: Storage capacity doubles
+      option C: Query execution speed approximately doubles for compute-intensive queries; cost doubles
+      option D: The warehouse can now handle 2x more users simultaneously
+      option E: Only DDL statements benefit from the size increase
+    correct Answer: option C
+    explanation: >
+      Increasing warehouse size (scaling up) doubles the compute resources (servers, CPU, memory) available 
+      for each query. For compute-intensive, memory-bound queries (large joins, complex aggregations, heavy 
+      transformations), this can approximately double execution speed. Cost also doubles as credits consumed 
+      per hour doubles. However, scaling up does NOT increase concurrency — that requires Multi-Cluster 
+      Warehouses. Simple queries that are already fast may see minimal improvement. The general guidance is: 
+      scale up for slow queries, scale out (MCW) for queuing/concurrency issues.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Sizing
+    exam: Core, DataAnalyst, DataEngineer
+
+  - Question No: "012"
+    question: Which of the following is TRUE about Snowflake's Query Acceleration Service (QAS)?
+    their options:
+      option A: QAS automatically scales out clusters for concurrent users
+      option B: QAS offloads portions of eligible queries to serverless compute to reduce warehouse queue time
+      option C: QAS is only available for X-Large and above warehouses
+      option D: QAS replaces the need for Multi-Cluster Warehouses
+      option E: QAS is a manual feature that must be triggered per query
+    correct Answer: option B
+    explanation: >
+      Query Acceleration Service (QAS) is a Snowflake feature that can accelerate eligible parts of queries 
+      by offloading portions to serverless compute resources managed by Snowflake. It helps reduce the impact 
+      of outlier queries that require significantly more resources than typical queries in a warehouse. 
+      QAS is enabled at the warehouse level using ENABLE_QUERY_ACCELERATION = TRUE, with an optional 
+      QUERY_ACCELERATION_MAX_SCALE_FACTOR parameter. It does NOT replace MCW — MCW handles concurrency 
+      while QAS handles individual query acceleration. Eligible queries must have scan-heavy operations 
+      that can be parallelized.
+    difficulty level: Hard
+    topic: Virtual Warehouses
+    sub topic: Warehouse Scaling
+    exam: Architect, DataEngineer
+
+  - Question No: "013"
+    question: What is the purpose of a Resource Monitor in Snowflake?
+    their options:
+      option A: To monitor query execution plans and suggest optimizations
+      option B: To track and control credit consumption of warehouses with alerts and actions
+      option C: To monitor data storage growth and alert on thresholds
+      option D: To track user login activity and suspicious behavior
+      option E: To monitor network bandwidth between Snowflake and cloud providers
+    correct Answer: option B
+    explanation: >
+      Resource Monitors are Snowflake objects used to control credit usage by Virtual Warehouses. 
+      You define a credit quota for a time interval (daily, weekly, monthly, or custom). When a warehouse 
+      reaches defined thresholds (e.g., 75%, 90%, 100%), Snowflake can: send notification alerts to 
+      designated users AND/OR take actions like suspending the warehouse immediately or at the end of the 
+      current statement. Resource Monitors can be applied at the account level (all warehouses) or 
+      individual warehouse level. They are a critical cost governance tool, especially in large organizations 
+      where multiple teams consume credits.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Core, Architect, DataEngineer
+
+  - Question No: "014"
+    question: Which statement is CORRECT about Snowpark-optimized warehouses?
+    their options:
+      option A: They are optimized for SQL queries with complex window functions
+      option B: They provide 16x memory per node compared to standard warehouses, ideal for ML workloads and Snowpark
+      option C: They automatically partition data for better query performance
+      option D: They support faster data loading from external stages
+      option E: They are only available in the AWS cloud provider
+    correct Answer: option B
+    explanation: >
+      Snowpark-optimized warehouses provide 16x more memory per node compared to standard warehouses of 
+      the same size. They are specifically designed for: Snowpark (Python/Java/Scala workloads), machine 
+      learning model training, complex data transformations that require large amounts of in-memory processing. 
+      They use a different node type with much higher memory-to-CPU ratio. Standard warehouses are better 
+      for traditional SQL workloads. Snowpark-optimized warehouses are available across AWS, Azure, and GCP. 
+      You specify them with WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED' during creation.
+    difficulty level: Hard
+    topic: Virtual Warehouses
+    sub topic: Warehouse Sizing
+    exam: DataEngineer, Architect
+
+  - Question No: "015"
+    question: What happens if a user submits a query and the assigned warehouse is currently suspended?
+    their options:
+      option A: The query fails immediately with an error
+      option B: The query is held until the warehouse is manually resumed
+      option C: If AUTO_RESUME is enabled, the warehouse automatically starts and the query runs
+      option D: The query runs on the Cloud Services layer instead
+      option E: Snowflake routes the query to another available warehouse
+    correct Answer: option C
+    explanation: >
+      When AUTO_RESUME = TRUE (which is the default), submitting a query to a suspended warehouse 
+      automatically triggers the warehouse to resume. The user experiences a short delay (typically 
+      5-10 seconds for the warehouse to start) but the query eventually runs. The 60-second minimum 
+      billing clock starts when the warehouse resumes. If AUTO_RESUME = FALSE, the query will fail 
+      with an error message stating the warehouse is suspended. Best practice is to keep AUTO_RESUME = TRUE 
+      for most interactive warehouses to provide seamless user experience, while using AUTO_SUSPEND to 
+      control costs during idle periods.
+    difficulty level: Easy
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Core, DataAnalyst
+
+  - Question No: "016"
+    question: A data engineering team runs nightly batch ETL jobs that typically take 2 hours. The warehouse is currently Large. What would be the MOST cost-effective approach?
+    their options:
+      option A: Keep the Large warehouse running 24/7
+      option B: Schedule the warehouse to be active only during the ETL window with AUTO_SUSPEND set to 60 seconds after completion
+      option C: Upgrade to 4X-Large to finish in 30 minutes and pay the same cost
+      option D: Use Serverless tasks with no warehouse
+      option E: Run the ETL across multiple small warehouses simultaneously
+    correct Answer: option B
+    explanation: >
+      The most cost-effective approach is to schedule the warehouse to run only during the ETL window 
+      and set AUTO_SUSPEND to 60 seconds (minimum) so it suspends immediately after the last query completes. 
+      You can use Snowflake Tasks or external schedulers to trigger the warehouse. Option C (4X-Large) 
+      would run in 30 minutes at 8x the credits/hour, costing roughly 2x total (0.5hrs × 128 credits vs 
+      2hrs × 8 credits = 64 credits each — actually roughly equal, so option C is competitive but not 
+      guaranteed cheaper). Option D (Serverless Tasks) could also be cost-effective for some ETL patterns. 
+      The key principle: avoid running warehouses when no work is being done.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: DataEngineer, Architect
+
+  - Question No: "017"
+    question: What is the SCALING_POLICY parameter in a Multi-Cluster Warehouse, and what are its valid values?
+    their options:
+      option A: FAST and SLOW — controls how quickly queries are optimized
+      option B: STANDARD and ECONOMY — controls when additional clusters are added
+      option C: AGGRESSIVE and CONSERVATIVE — controls auto-suspend timing
+      option D: LINEAR and EXPONENTIAL — controls credit consumption scaling
+      option E: SCALE_POLICY is not a valid Snowflake parameter
+    correct Answer: option B
+    explanation: >
+      SCALING_POLICY in Multi-Cluster Warehouses (Auto-Scale mode) has two values: 
+      (1) STANDARD (default) — Snowflake adds clusters to minimize query queuing. A new cluster starts 
+      when a query is queued. Prioritizes performance over cost. Removes clusters only after they've been 
+      idle for several consecutive checks.
+      (2) ECONOMY — Snowflake is more conservative, fully loading existing clusters before adding new ones. 
+      A new cluster only starts when the system estimates the queued queries will keep it busy for at least 
+      6 minutes. Prioritizes cost savings over immediate performance. 
+      Choose STANDARD for user-facing/interactive workloads. Choose ECONOMY for batch/background workloads 
+      where some queuing is acceptable.
+    difficulty level: Hard
+    topic: Virtual Warehouses
+    sub topic: Warehouse Scaling
+    exam: Architect, DataEngineer
+
+  - Question No: "018"
+    question: Which of the following Snowflake warehouse types is available when creating a warehouse?
+    their options:
+      option A: STANDARD and PREMIUM
+      option B: STANDARD and SNOWPARK-OPTIMIZED
+      option C: COMPUTE and STORAGE
+      option D: BASIC and ENTERPRISE
+      option E: SQL and PYTHON
+    correct Answer: option B
+    explanation: >
+      Snowflake currently offers two warehouse types: (1) STANDARD — The default warehouse type, 
+      optimized for traditional SQL workloads including queries, DML, and data loading. Provides balanced 
+      CPU and memory resources. (2) SNOWPARK-OPTIMIZED — Provides 16x more memory per node, designed 
+      for memory-intensive workloads including Snowpark (Python/Java/Scala), machine learning training, 
+      and complex in-memory data processing. You specify the type in the CREATE WAREHOUSE statement: 
+      CREATE WAREHOUSE my_wh WITH WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED'. The two types reflect 
+      Snowflake's recognition that ML/data science workloads have fundamentally different resource profiles 
+      than traditional analytics.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Fundamentals
+    exam: DataEngineer, Architect, Core
+
+  - Question No: "019"
+    question: What does the INITIALLY_SUSPENDED parameter do when creating a warehouse?
+    their options:
+      option A: Creates the warehouse in a paused state that never auto-resumes
+      option B: Creates the warehouse in a suspended state so it does not start consuming credits immediately
+      option C: Sets the initial AUTO_SUSPEND value to the minimum
+      option D: Prevents users from using the warehouse until an admin activates it
+      option E: INITIALLY_SUSPENDED is not a valid Snowflake parameter
+    correct Answer: option B
+    explanation: >
+      INITIALLY_SUSPENDED = TRUE creates the warehouse in a suspended state immediately after creation, 
+      meaning it does not start consuming credits until a query is submitted (assuming AUTO_RESUME = TRUE) 
+      or it is manually resumed. This is a best practice when creating warehouses programmatically or via 
+      infrastructure-as-code (Terraform, etc.) because it prevents accidental credit consumption from 
+      warehouses that may not be used right away. The warehouse is fully functional — it just starts in 
+      the suspended state. In Snowsight (UI), new warehouses default to started unless you specify otherwise.
+    difficulty level: Easy
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Core, DataEngineer
+
+  - Question No: "020"
+    question: You notice that queries on your MEDIUM warehouse are spilling to local disk. What is the BEST first step to resolve this?
+    their options:
+      option A: Enable Query Result Caching
+      option B: Add more tables to the query to distribute the load
+      option C: Increase the warehouse size to provide more memory per query
+      option D: Enable Multi-Cluster Warehouse mode
+      option E: Reduce the STATEMENT_TIMEOUT_IN_SECONDS parameter
+    correct Answer: option C
+    explanation: >
+      Query spilling to local disk (and then to remote storage) occurs when a query requires more memory 
+      than the warehouse can provide. Spilling significantly degrades query performance. The solution is 
+      to scale UP (increase warehouse size) to provide more memory per node for the query. In Snowflake's 
+      query profile, you can see "Bytes spilled to local storage" and "Bytes spilled to remote storage" — 
+      any remote spilling is a serious performance issue. Other mitigations include: optimizing the query 
+      to reduce data processed, improving clustering keys, or breaking complex queries into smaller steps. 
+      Multi-Cluster Warehouse (option D) addresses concurrency, not memory/spilling issues.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Sizing
+    exam: DataEngineer, DataAnalyst, Architect
+
+  - Question No: "021"
+    question: "Which of the following statements are TRUE about Snowflake Virtual Warehouses? (Select TWO)"
+    their options:
+      option A: A virtual warehouse consumes credits only when it is in a RUNNING state
+      option B: A virtual warehouse shares compute resources with the Snowflake storage layer
+      option C: Multiple warehouses can run simultaneously and access the same data without contention
+      option D: Warehouse credit consumption is billed per minute with a 10-minute minimum
+      option E: A warehouse must be manually resumed after auto-suspend — it cannot auto-resume
+    correct Answer: option A, option C
+    explanation: >
+      TWO statements are true: (A) Warehouses only consume credits when RUNNING — suspended warehouses incur zero
+      compute costs. (C) Multiple warehouses can run concurrently and query the same data simultaneously because
+      Snowflake separates storage from compute; each warehouse has its own independent compute cluster.
+      The other options are false: (B) compute and storage are fully separated; (D) billing is per-second with
+      a 60-second minimum, not per-minute with 10-minute minimum; (E) warehouses can auto-resume on the next query
+      when auto-resume is enabled.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Fundamentals
+    exam: Core, DataEngineer, Architect, DataAnalyst
+
+  - Question No: "022"
+    question: "Which THREE of the following are valid reasons to scale OUT (add clusters) rather than scale UP (increase size) a Snowflake warehouse?"
+    their options:
+      option A: A large number of concurrent users are queuing with similar-sized queries
+      option B: Individual queries are slow due to insufficient memory for large joins
+      option C: Your workload has unpredictable concurrency spikes throughout the day
+      option D: A single complex analytical query needs more CPU parallelism
+      option E: A batch ETL job runs many independent small queries in parallel
+    correct Answer: option A, option C, option E
+    explanation: >
+      THREE scenarios favor scaling OUT (Multi-Cluster Warehouses):
+      (A) High concurrency with many similar queries queuing — adding clusters distributes users across clusters.
+      (C) Unpredictable concurrency spikes — auto-scaling adds/removes clusters dynamically based on demand.
+      (E) Many independent small parallel queries (ETL patterns) — each cluster handles separate query threads.
+      Scaling UP is better for: (B) individual queries needing more memory for complex operations; 
+      (D) a single query that benefits from more parallelism within one cluster.
+      The rule of thumb: if you have MANY CONCURRENT USERS → scale out; if you have COMPLEX QUERIES → scale up.
+    difficulty level: Hard
+    topic: Virtual Warehouses
+    sub topic: Warehouse Scaling
+    exam: Core, Architect, DataEngineer
+
+  - Question No: "023"
+    question: "Which of the following actions will IMMEDIATELY stop credit consumption for a running Snowflake warehouse? (Select TWO)"
+    their options:
+      option A: Setting AUTO_SUSPEND to 0 seconds
+      option B: Manually suspending the warehouse using ALTER WAREHOUSE ... SUSPEND
+      option C: Dropping all tables in the database the warehouse is querying
+      option D: Removing all users from the warehouse's resource monitor
+      option E: Setting the warehouse SIZE to X-Small
+    correct Answer: option A, option B
+    explanation: >
+      TWO actions immediately stop credit consumption:
+      (A) Setting AUTO_SUSPEND = 0 causes the warehouse to suspend immediately after the current query completes
+      (though in practice, Snowflake requires a minimum of 1 minute — setting 0 defaults to 60 seconds).
+      (B) ALTER WAREHOUSE name SUSPEND immediately suspends the warehouse, stopping all credit consumption
+      at the end of the current billing second.
+      The other options are incorrect: (C) dropping tables has no effect on warehouse state; 
+      (D) resource monitors control spending limits, not the running state; 
+      (E) resizing a warehouse does NOT stop it — it stays running at the new size.
+    difficulty level: Medium
+    topic: Virtual Warehouses
+    sub topic: Warehouse Management
+    exam: Core, DataEngineer, DataAnalyst

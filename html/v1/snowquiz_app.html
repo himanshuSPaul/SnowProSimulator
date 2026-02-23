@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnowQuiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0b0e14; --surf:#111620; --surf2:#192030; --border:#1e2d42; --border2:#253550;
+  --accent:#00d4ff; --accent-dim:#003d52; --text:#d0dff0; --muted:#637087;
+  --easy:#00c896; --easy-bg:#00201a; --easy-dim:#003d2e;
+  --med:#f5a623;  --med-bg:#1f1400;  --med-dim:#3d2800;
+  --hard:#ff4757; --hard-bg:#200010; --hard-dim:#3d0020;
+  --r:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── LOAD SCREEN ─────────────────────────────────────────── */
+#ls{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:1000;transition:opacity .4s,visibility .4s;padding:20px}
+#ls.gone{opacity:0;visibility:hidden;pointer-events:none}
+.logo{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;background:linear-gradient(135deg,var(--accent),#7b61ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.03em;line-height:1}
+.logo-sub{font-size:12px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-top:5px;text-align:center}
+
+/* drop zone */
+.dz{
+  width:480px;max-width:94vw;
+  border:2px dashed var(--border2);border-radius:20px;
+  padding:40px 32px;text-align:center;cursor:pointer;
+  background:var(--surf);transition:all .25s;position:relative;
+}
+.dz:hover,.dz.over{border-color:var(--accent);background:rgba(0,212,255,.04);box-shadow:0 0 48px rgba(0,212,255,.12);transform:translateY(-2px)}
+.dz-icon{font-size:44px;margin-bottom:14px}
+.dz-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;margin-bottom:8px}
+.dz-hint{font-size:13px;color:var(--muted);line-height:1.7}
+.dz-hint strong{color:var(--accent)}
+.dz-pattern{
+  display:inline-block;margin-top:12px;
+  font-family:monospace;font-size:13px;
+  background:var(--surf2);color:var(--accent);
+  border:1px solid var(--accent-dim);border-radius:6px;
+  padding:4px 14px;letter-spacing:.02em;
+}
+#fi{display:none}
+
+/* loaded files list */
+.files-list{
+  width:480px;max-width:94vw;
+  background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;display:none;
+}
+.files-list-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:var(--surf2);border-bottom:1px solid var(--border);
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+}
+.files-list-header span{color:var(--easy);font-size:13px}
+.file-row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.file-row:last-child{border-bottom:none}
+.file-icon{font-size:16px;flex-shrink:0}
+.file-name{flex:1;color:var(--text);font-family:monospace;font-size:12px}
+.file-count{font-family:'Syne',sans-serif;font-size:11px;color:var(--easy);background:var(--easy-bg);border:1px solid var(--easy-dim);border-radius:4px;padding:1px 7px;white-space:nowrap}
+.file-err{font-family:'Syne',sans-serif;font-size:11px;color:var(--hard);background:var(--hard-bg);border:1px solid var(--hard-dim);border-radius:4px;padding:1px 7px}
+
+.load-btn{
+  padding:12px 40px;border-radius:10px;
+  background:var(--accent);border:none;color:#000;
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;transition:all .2s;display:none;
+}
+.load-btn:hover{background:#00b8d9;transform:translateY(-1px)}
+
+.fmt{width:480px;max-width:94vw;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;font-size:12px;color:var(--muted);line-height:1.8}
+.fmt b{color:var(--text);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:6px}
+.fmt-cols{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.fc{background:var(--surf2);color:var(--accent);border-radius:4px;padding:2px 7px;font-family:monospace;font-size:11px}
+.err{color:var(--hard);font-size:13px;background:var(--hard-bg);border:1px solid var(--hard-dim);border-radius:8px;padding:10px 16px;max-width:480px;display:none}
+
+/* ── APP ─────────────────────────────────────────────────── */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.on{display:flex}
+
+.topbar{height:54px;background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:50;flex-wrap:nowrap;overflow:hidden}
+.tlogo{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;background:linear-gradient(135deg,var(--accent),#7b61ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;flex-shrink:0}
+.tfiles{display:flex;gap:6px;flex:1;overflow:hidden;min-width:0}
+.tfile-tag{font-size:11px;color:var(--muted);background:var(--surf2);border:1px solid var(--border);border-radius:5px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;flex-shrink:0}
+.tfile-tag.more{color:var(--accent);border-color:var(--accent-dim);background:var(--accent-dim)}
+.tstats{display:flex;gap:12px;margin-left:auto;flex-shrink:0}
+.ts{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.ts strong{color:var(--text);font-family:'Syne',sans-serif}
+.gbtn{background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:12px;border-radius:6px;padding:4px 10px;cursor:pointer;transition:all .2s;font-family:'Instrument Sans',sans-serif;white-space:nowrap;flex-shrink:0}
+.gbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+.body{display:flex;flex:1;overflow:hidden}
+
+/* sidebar */
+.sb{width:256px;min-width:256px;background:var(--surf);border-right:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px}
+.sblk h4{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.rpct{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--accent)}
+.rlbl{font-size:11px;color:var(--muted)}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.spill{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center}
+.spill .v{font-family:'Syne',sans-serif;font-size:20px;display:block}
+.spill .l{font-size:10px;color:var(--muted);margin-top:2px}
+.vc{color:var(--easy)}.vw{color:var(--hard)}.vs{color:var(--med)}.va{color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .18s;font-family:'Instrument Sans',sans-serif;white-space:nowrap}
+.chip:hover{border-color:var(--accent);color:var(--text)}
+.chip.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.chip .n{font-family:'Syne',sans-serif;font-size:10px;opacity:.7}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.qf-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .18s;font-family:'Instrument Sans',sans-serif;text-align:left}
+.qf-btn:hover{border-color:var(--border2);color:var(--text)}
+.qf-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.05)}
+.qf-btn .n{font-family:'Syne',sans-serif;font-size:11px;background:var(--surf2);border-radius:4px;padding:1px 6px}
+
+/* main */
+.main{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surf);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;font-family:'Instrument Sans',sans-serif}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pr{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+.btn.pr:hover{background:#00b8d9}
+.btn.dr{border-color:var(--hard-dim);color:var(--hard)}
+.btn.dr:hover{background:var(--hard-bg)}
+.btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+.sw{flex:1;max-width:280px;display:flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--border2);border-radius:8px;padding:0 12px;transition:border-color .18s}
+.sw:focus-within{border-color:var(--accent)}
+.sw input{background:transparent;border:none;outline:none;color:var(--text);font-size:13px;padding:8px 0;width:100%;font-family:'Instrument Sans',sans-serif}
+.sw input::placeholder{color:var(--muted)}
+.rc{font-size:12px;color:var(--muted);margin-left:auto;font-family:'Syne',sans-serif}
+
+/* browse */
+#bv{display:flex;flex-direction:column;gap:10px}
+#bv.hide{display:none}
+.qcard{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;cursor:pointer;transition:border-color .18s,transform .18s;position:relative}
+.qcard:hover{border-color:var(--border2);transform:translateX(3px)}
+.qcard-meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+.qcard-text{font-size:14px;line-height:1.55;color:#c8dcf0}
+.qcard-num{position:absolute;top:14px;right:14px;font-family:'Syne',sans-serif;font-size:11px;color:var(--muted)}
+.qcard.ok{border-left:3px solid var(--easy)}
+.qcard.miss{border-left:3px solid var(--hard)}
+.badge{font-size:10px;font-weight:600;font-family:'Syne',sans-serif;padding:3px 9px;border-radius:20px;letter-spacing:.04em;white-space:nowrap}
+.be{background:var(--easy-bg);border:1px solid var(--easy-dim);color:var(--easy)}
+.bm{background:var(--med-bg);border:1px solid var(--med-dim);color:var(--med)}
+.bh{background:var(--hard-bg);border:1px solid var(--hard-dim);color:var(--hard)}
+.bx{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);color:var(--accent)}
+.bt{background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--muted)}
+.bsrc{background:rgba(123,97,255,.1);border:1px solid rgba(123,97,255,.3);color:#a78bfa}
+.bok{background:var(--easy-bg);border:1px solid var(--easy-dim);color:var(--easy)}
+.bno{background:var(--hard-bg);border:1px solid var(--hard-dim);color:var(--hard)}
+
+/* quiz */
+#qv{display:none;flex-direction:column;gap:16px}
+#qv.on{display:flex}
+.qbar{display:flex;align-items:center;gap:14px}
+.qtrack{flex:1;height:3px;background:var(--surf2);border-radius:2px}
+.qfill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#7b61ff);transition:width .4s cubic-bezier(.4,0,.2,1)}
+.qcnt{font-family:'Syne',sans-serif;font-size:12px;color:var(--muted);white-space:nowrap}
+.qc{background:var(--surf);border:1px solid var(--border);border-radius:16px;padding:28px 30px;animation:up .3s cubic-bezier(.4,0,.2,1)}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.qmeta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.qidx{font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Syne',sans-serif}
+.qtxt{font-size:17px;font-weight:500;line-height:1.65;color:#e0eeff;margin-bottom:24px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:10px;background:var(--surf2);border:1px solid var(--border);cursor:pointer;transition:all .18s;text-align:left;font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--text);line-height:1.5}
+.opt:hover:not(:disabled){border-color:var(--accent);background:rgba(0,212,255,.05)}
+.opt:disabled{cursor:default}
+.ol{width:28px;min-width:28px;height:28px;border-radius:7px;background:var(--surf);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;flex-shrink:0;transition:all .18s}
+.opt.cor{border-color:var(--easy);background:var(--easy-bg);color:#a0f4d4}
+.opt.cor .ol{background:var(--easy);color:#000;border-color:var(--easy)}
+.opt.wrg{border-color:var(--hard);background:var(--hard-bg);color:#ffb0b8}
+.opt.wrg .ol{background:var(--hard);color:#fff;border-color:var(--hard)}
+.expl{margin-top:14px;padding:14px 16px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);border-left:4px solid var(--accent);border-radius:8px;font-size:13px;line-height:1.75;color:#8ec8e8;animation:up .25s ease}
+.expl strong{color:var(--accent)}
+.qnav{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.bmbtn{background:transparent;border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:16px;color:var(--muted);cursor:pointer;transition:all .18s}
+.bmbtn:hover,.bmbtn.on{color:var(--med);border-color:var(--med);background:var(--med-bg)}
+.nbtns{display:flex;gap:8px}
+.empty{text-align:center;padding:64px 20px;color:var(--muted)}
+.empty .ico{font-size:52px;margin-bottom:16px}
+.empty h3{font-family:'Syne',sans-serif;font-size:18px;color:var(--text);margin-bottom:8px}
+
+/* modal */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center}
+.mbg.on{display:flex}
+.modal{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:40px;max-width:460px;width:90%;text-align:center;animation:up .3s ease}
+.modal h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:14px;color:var(--muted);margin-bottom:24px}
+.mgrd{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px}
+.mi{background:var(--surf2);border-radius:10px;padding:14px 8px}
+.mi .v{font-family:'Syne',sans-serif;font-size:24px;display:block}
+.mi .l{font-size:11px;color:var(--muted);margin-top:3px}
+.mbtns{display:flex;gap:10px;justify-content:center}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOAD SCREEN ══════════════ -->
+<div id="ls">
+  <div style="text-align:center">
+    <div class="logo">SnowQuiz</div>
+    <div class="logo-sub">Drop your knowledge base files · Start practising</div>
+  </div>
+
+  <!-- drop zone -->
+  <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
+    <div class="dz-icon">📂</div>
+    <div class="dz-title">Drop your knowledge base files here</div>
+    <div class="dz-hint">
+      or <strong>click to browse</strong> — select one or multiple files<br>
+      Accepts <strong>.md</strong> Markdown tables &nbsp;·&nbsp; <strong>.csv</strong> spreadsheet exports
+    </div>
+    <div class="dz-pattern">knowledgebase_*.md</div>
+    <input type="file" id="fi" accept=".md,.csv,.txt" multiple>
+  </div>
+
+  <!-- staged files preview -->
+  <div class="files-list" id="files-list">
+    <div class="files-list-header">
+      Files staged <span id="staged-count">0 questions</span>
+    </div>
+    <div id="files-rows"></div>
+  </div>
+
+  <!-- launch button -->
+  <button class="load-btn" id="load-btn" onclick="launchApp()">▶ Load All &amp; Start</button>
+
+  <!-- format reminder -->
+  <div class="fmt">
+    <b>Markdown Table Format</b>
+    Each file is a Markdown table. Required columns:
+    <div class="fmt-cols">
+      <span class="fc">No</span><span class="fc">Question</span>
+      <span class="fc">Option A</span><span class="fc">Option B</span>
+      <span class="fc">Option C</span><span class="fc">Option D</span>
+      <span class="fc">Answer</span><span class="fc">Explanation</span>
+      <span class="fc">Level</span><span class="fc">Exam</span><span class="fc">Topic</span>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+      Name files as <code style="color:var(--accent)">knowledgebase_topic.md</code> — e.g.
+      <code style="color:var(--accent)">knowledgebase_architecture.md</code>,
+      <code style="color:var(--accent)">knowledgebase_security.md</code> …<br>
+      Drop all of them at once and the app merges everything automatically.
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <header class="topbar">
+    <div class="tlogo">SnowQuiz</div>
+    <div class="tfiles" id="tb-files"></div>
+    <div class="tstats">
+      <div class="ts">Questions <strong id="tb-n">0</strong></div>
+      <div class="ts">Answered <strong id="tb-a">0</strong></div>
+      <div class="ts">Accuracy <strong id="tb-p">—</strong></div>
+    </div>
+    <button class="gbtn" onclick="chgFile()">⇄ Change Files</button>
+  </header>
+
+  <div class="body">
+    <aside class="sb">
+      <div class="sblk">
+        <div class="ring-wrap">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="38" fill="none" stroke="#192030" stroke-width="7"/>
+            <circle id="ring" cx="45" cy="45" r="38" fill="none" stroke="var(--accent)"
+              stroke-width="7" stroke-linecap="round"
+              stroke-dasharray="238.76" stroke-dashoffset="238.76"
+              transform="rotate(-90 45 45)" style="transition:stroke-dashoffset .5s"/>
+          </svg>
+          <div class="rpct" id="rpct">0%</div>
+          <div class="rlbl" id="rlbl">0 of 0</div>
+        </div>
+      </div>
+      <div class="sblk">
+        <div class="sgrid">
+          <div class="spill"><span class="v vc" id="sc-c">0</span><span class="l">Correct</span></div>
+          <div class="spill"><span class="v vw" id="sc-w">0</span><span class="l">Wrong</span></div>
+          <div class="spill"><span class="v vs" id="sc-s">0</span><span class="l">Remaining</span></div>
+          <div class="spill"><span class="v va" id="sc-a">—</span><span class="l">Accuracy</span></div>
+        </div>
+      </div>
+
+      <!-- Source filter (one chip per file) -->
+      <div class="sblk" id="sb-src"><h4>Knowledge Base</h4><div class="chips" id="c-src"></div></div>
+      <div class="sblk"><h4>Exam</h4><div class="chips" id="c-exam"></div></div>
+      <div class="sblk"><h4>Difficulty</h4><div class="chips" id="c-lvl"></div></div>
+      <div class="sblk"><h4>Topic</h4><div class="chips" id="c-topic"></div></div>
+
+      <div class="sblk">
+        <h4>Quick Filters</h4>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="qf-btn" id="qf-bm" onclick="toggleSp('bm')">★ Bookmarked <span class="n" id="n-bm">0</span></button>
+          <button class="qf-btn" id="qf-wr" onclick="toggleSp('wr')">✗ Wrong Answers <span class="n" id="n-wr">0</span></button>
+          <button class="qf-btn" id="qf-ua" onclick="toggleSp('ua')">○ Not Answered <span class="n" id="n-ua">0</span></button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <button class="btn pr" onclick="startQuiz()">▶ Start Quiz</button>
+        <button class="btn" onclick="showBrowse()">☰ Browse</button>
+        <button class="btn" onclick="doShuffle()">⇄ Shuffle</button>
+        <button class="btn dr" onclick="doReset()">↺ Reset</button>
+        <div class="sw">
+          <span style="color:var(--muted);font-size:15px">⌕</span>
+          <input type="text" placeholder="Search questions…" id="srch" oninput="applyFilters()">
+        </div>
+        <span class="rc" id="rc"></span>
+      </div>
+
+      <div id="bv"><div id="ql"></div></div>
+
+      <div id="qv">
+        <div class="qbar">
+          <button class="btn" style="padding:5px 12px;font-size:12px" onclick="showBrowse()">← Back</button>
+          <div class="qtrack"><div class="qfill" id="qfill"></div></div>
+          <div class="qcnt" id="qcnt">1 / 0</div>
+        </div>
+        <div class="qc" id="qc">
+          <div class="qmeta" id="qmeta"></div>
+          <div class="qidx"  id="qidx"></div>
+          <div class="qtxt"  id="qtxt"></div>
+          <div class="opts"  id="qopts"></div>
+          <div id="qexpl"></div>
+        </div>
+        <div class="qnav">
+          <button class="bmbtn" id="bmbtn" onclick="toggleBm()">☆</button>
+          <div class="nbtns">
+            <button class="btn" id="btn-p" onclick="qPrev()">← Prev</button>
+            <button class="btn pr" id="btn-n" onclick="qNext()">Next →</button>
+            <button class="btn pr" id="btn-f" style="display:none" onclick="finishQuiz()">✓ Finish</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- results modal -->
+<div class="mbg" id="modal">
+  <div class="modal">
+    <svg style="display:block;margin:0 auto 20px" width="110" height="110" viewBox="0 0 110 110">
+      <circle cx="55" cy="55" r="46" fill="none" stroke="#192030" stroke-width="9"/>
+      <circle id="mring" cx="55" cy="55" r="46" fill="none" stroke="var(--easy)"
+        stroke-width="9" stroke-linecap="round" stroke-dasharray="289.03" stroke-dashoffset="289.03"
+        transform="rotate(-90 55 55)" style="transition:stroke-dashoffset 1s .3s ease"/>
+    </svg>
+    <h2 id="m-t">Quiz Complete!</h2>
+    <p id="m-s">Here's how you did</p>
+    <div class="mgrd">
+      <div class="mi"><span class="v vc" id="m-c">0</span><span class="l">Correct</span></div>
+      <div class="mi"><span class="v vw" id="m-w">0</span><span class="l">Wrong</span></div>
+      <div class="mi"><span class="v va" id="m-p">0%</span><span class="l">Score</span></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn" onclick="revWrong()">Review Wrong</button>
+      <button class="btn pr" onclick="closeModal()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  PARSERS
+// ══════════════════════════════════════════════════════════
+function parseMD(text) {
+  const lines = text.split(/\r?\n/);
+  let hi = lines.findIndex(l => /^\|.+\|/.test(l.trim()));
+  if (hi === -1) return null;
+  const headers = lines[hi].split('|').map(h => h.trim().toLowerCase()).filter(Boolean);
+  let di = hi + 1;
+  if (lines[di] && /^\|[\s\-:|]+\|$/.test(lines[di].trim())) di++;
+  const rows = [];
+  for (let i = di; i < lines.length; i++) {
+    const ln = lines[i].trim();
+    if (!ln.startsWith('|')) continue;
+    const cells = splitRow(ln);
+    if (cells.length < 2) continue;
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (cells[idx]||'').replace(/\\\|/g,'|').trim(); });
+    rows.push(obj);
+  }
+  return rows.length ? rows : null;
+}
+
+function splitRow(line) {
+  const inner = line.replace(/^\|/,'').replace(/\|$/,'');
+  const parts = []; let cur='', i=0;
+  while (i < inner.length) {
+    if (inner[i]==='\\' && inner[i+1]==='|') { cur+='|'; i+=2; }
+    else if (inner[i]==='|') { parts.push(cur); cur=''; i++; }
+    else cur += inner[i++];
+  }
+  parts.push(cur);
+  return parts;
+}
+
+function parseCSV(text) {
+  const lines = text.replace(/\r\n|\r/g,'\n').split('\n').filter(l=>l.trim());
+  if (lines.length < 2) return null;
+  const pr = line => {
+    const cells=[]; let cur='',inQ=false;
+    for (let i=0;i<line.length;i++) {
+      const c=line[i];
+      if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+      else if(c===','&&!inQ){cells.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    cells.push(cur.trim()); return cells;
+  };
+  const headers = pr(lines[0]).map(h=>h.toLowerCase().trim());
+  return lines.slice(1).map(l=>{
+    const cells=pr(l),obj={};
+    headers.forEach((h,i)=>{obj[h]=(cells[i]||'').trim();});
+    return obj;
+  }).filter(r=>Object.values(r).some(Boolean));
+}
+
+function norm(r, sourceName) {
+  const get = (...keys) => {
+    for (const k of keys) {
+      const rk = Object.keys(r).find(x=>x.replace(/[\s_]/g,'').toLowerCase()===k.replace(/[\s_]/g,'').toLowerCase());
+      if (rk!==undefined && r[rk]) return r[rk];
+    }
+    return '';
+  };
+  const opts = ['a','b','c','d','e'].map(l=>get(`option${l}`,`opt${l}`,`option ${l}`)).filter(Boolean);
+  const ansRaw = get('answer','correct','ans');
+  const ansIdx = {A:0,B:1,C:2,D:3,E:4,'1':0,'2':1,'3':2,'4':3}[(ansRaw||'').toUpperCase().trim()] ?? 0;
+  return {
+    question:    get('question','q') || '',
+    options:     opts,
+    answer:      ansIdx,
+    explanation: get('explanation','explain','reason') || '',
+    level:       get('level','difficulty') || 'Medium',
+    exam:        get('exam','certification') || 'General',
+    topic:       get('topic','category','subject') || 'General',
+    source:      sourceName,   // ← which file it came from
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+//  STAGED FILES (before launch)
+// ══════════════════════════════════════════════════════════
+let staged = [];   // [{ name, questions[] }]
+
+document.getElementById('fi').addEventListener('change', e => {
+  if (e.target.files.length) readFiles([...e.target.files]);
+});
+
+const dz = document.getElementById('dz');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('over');
+  if (e.dataTransfer.files.length) readFiles([...e.dataTransfer.files]);
+});
+
+function readFiles(files) {
+  // Deduplicate by name — re-adding same file replaces it
+  let pending = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const text = e.target.result;
+        const ext  = file.name.split('.').pop().toLowerCase();
+        const raw  = ext==='csv' ? parseCSV(text) : parseMD(text);
+        const qs   = raw ? raw.map(r=>norm(r, labelFromFilename(file.name))).filter(q=>q.question&&q.options.length>=2) : [];
+        // replace if already staged
+        const idx = staged.findIndex(s=>s.name===file.name);
+        if (idx>=0) staged[idx] = { name:file.name, label:labelFromFilename(file.name), questions:qs, ok:qs.length>0 };
+        else staged.push({ name:file.name, label:labelFromFilename(file.name), questions:qs, ok:qs.length>0 });
+      } catch(err) {
+        staged.push({ name:file.name, label:file.name, questions:[], ok:false, errMsg:err.message });
+      }
+      if (--pending === 0) renderStaged();
+    };
+    reader.readAsText(file,'UTF-8');
+  });
+}
+
+function labelFromFilename(name) {
+  // "knowledgebase_virtual_warehouses.md" → "Virtual Warehouses"
+  return name
+    .replace(/\.(md|csv|txt)$/i,'')
+    .replace(/^knowledgebase[_\-]?/i,'')
+    .replace(/[_\-]/g,' ')
+    .replace(/\b\w/g,c=>c.toUpperCase())
+    .trim() || name;
+}
+
+function renderStaged() {
+  const list = document.getElementById('files-list');
+  const rows = document.getElementById('files-rows');
+  const btn  = document.getElementById('load-btn');
+  if (!staged.length) { list.style.display='none'; btn.style.display='none'; return; }
+  list.style.display = 'block';
+  const totalQ = staged.reduce((s,f)=>s+f.questions.length,0);
+  document.getElementById('staged-count').textContent = `${totalQ} questions from ${staged.length} file${staged.length>1?'s':''}`;
+  rows.innerHTML = staged.map(f => `
+    <div class="file-row">
+      <span class="file-icon">${f.ok?'📋':'⚠️'}</span>
+      <span class="file-name">${f.name}</span>
+      ${f.ok
+        ? `<span class="file-count">${f.questions.length} questions</span>`
+        : `<span class="file-err">parse error</span>`}
+    </div>`).join('');
+  const hasValid = staged.some(f=>f.ok&&f.questions.length>0);
+  btn.style.display = hasValid ? 'block' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let DB=[], filtered=[], answered={}, bookmarks=new Set();
+let quizQ=[], qPos=0, mode='browse', special=null;
+const AF = { src:new Set(['*']), exam:new Set(['*']), level:new Set(['*']), topic:new Set(['*']) };
+
+// ══════════════════════════════════════════════════════════
+//  LAUNCH
+// ══════════════════════════════════════════════════════════
+function launchApp() {
+  DB = staged.filter(f=>f.ok).flatMap(f=>f.questions);
+  if (!DB.length) { document.getElementById('err').textContent='⚠ No valid questions found.'; document.getElementById('err').style.display='block'; return; }
+  document.getElementById('ls').classList.add('gone');
+  document.getElementById('app').classList.add('on');
+
+  // topbar file tags
+  const tbf = document.getElementById('tb-files');
+  const names = staged.filter(f=>f.ok).map(f=>f.label);
+  const show  = names.slice(0,3);
+  const rest  = names.length - show.length;
+  tbf.innerHTML = show.map(n=>`<span class="tfile-tag">${n}</span>`).join('')
+    + (rest>0?`<span class="tfile-tag more">+${rest} more</span>`:'');
+
+  document.getElementById('tb-n').textContent = DB.length;
+  buildChips(); applyFilters(); updateStats(); showBrowse();
+}
+
+function chgFile() {
+  DB=[]; filtered=[]; answered={}; bookmarks=new Set(); staged=[];
+  quizQ=[]; qPos=0; special=null;
+  AF.src=new Set(['*']); AF.exam=new Set(['*']); AF.level=new Set(['*']); AF.topic=new Set(['*']);
+  document.getElementById('ls').classList.remove('gone');
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('fi').value='';
+  document.getElementById('files-list').style.display='none';
+  document.getElementById('load-btn').style.display='none';
+  document.getElementById('err').style.display='none';
+  staged=[];
+}
+
+// ══════════════════════════════════════════════════════════
+//  CHIPS — built dynamically from data
+// ══════════════════════════════════════════════════════════
+function buildChips() {
+  const sources = [...new Set(DB.map(q=>q.source))].sort();
+  const exams   = [...new Set(DB.map(q=>q.exam))].sort();
+  const levels  = ['Easy','Medium','Hard'].filter(l=>DB.some(q=>q.level===l));
+  const topics  = [...new Set(DB.map(q=>q.topic))].sort();
+
+  // source chips get purple accent to distinguish from content filters
+  mkChips('c-src',   ['All',...sources], 'src',   'src');
+  mkChips('c-exam',  ['All',...exams],   'exam',  'exam');
+  mkChips('c-lvl',   ['All',...levels],  'level', 'lvl');
+  mkChips('c-topic', ['All',...topics],  'topic', 'topic');
+
+  // hide source block if only 1 file
+  document.getElementById('sb-src').style.display = sources.length > 1 ? '' : 'none';
+}
+
+function mkChips(elId, items, key, afKey) {
+  const el = document.getElementById(elId); el.innerHTML='';
+  items.forEach(item => {
+    const isAll=item==='All', val=isAll?'*':item;
+    const cnt = isAll ? DB.length : DB.filter(q=>q[key===afKey?key:'source']===item||q[key]===item).length;
+    // colour dot for difficulty
+    const dot = key==='level'&&!isAll
+      ? `<span class="dot" style="background:${item==='Easy'?'var(--easy)':item==='Medium'?'var(--med)':'var(--hard)'}"></span>` : '';
+    const b=document.createElement('button');
+    b.className='chip'+(isAll?' on':'');
+    b.dataset.af=afKey; b.dataset.val=val;
+    b.innerHTML=`${dot}${item} <span class="n">${cnt}</span>`;
+    b.onclick=()=>toggleChip(afKey,val,b,elId);
+    el.appendChild(b);
+  });
+}
+
+function toggleChip(afKey, val, btn, grpId) {
+  const grp=document.getElementById(grpId);
+  const af=AF[afKey==='lvl'?'level':afKey];
+  if (val==='*') {
+    af.clear(); af.add('*');
+    grp.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.val==='*'));
+  } else {
+    af.delete('*');
+    af.has(val)?af.delete(val):af.add(val);
+    if(!af.size) af.add('*');
+    grp.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',af.has(c.dataset.val)));
+  }
+  special=null; document.querySelectorAll('.qf-btn').forEach(b=>b.classList.remove('on'));
+  applyFilters();
+}
+
+function toggleSp(type) {
+  special=special===type?null:type;
+  ['bm','wr','ua'].forEach(t=>document.getElementById('qf-'+t).classList.toggle('on',special===t));
+  applyFilters();
+}
+
+// ══════════════════════════════════════════════════════════
+//  FILTERING
+// ══════════════════════════════════════════════════════════
+function applyFilters() {
+  const s=(document.getElementById('srch').value||'').toLowerCase();
+  filtered=DB.map((_,i)=>i).filter(i=>{
+    const q=DB[i];
+    if(!AF.src.has('*')  && !AF.src.has(q.source))  return false;
+    if(!AF.exam.has('*') && !AF.exam.has(q.exam))    return false;
+    if(!AF.level.has('*')&& !AF.level.has(q.level))  return false;
+    if(!AF.topic.has('*')&& !AF.topic.has(q.topic))  return false;
+    if(special==='bm'&&!bookmarks.has(i))                       return false;
+    if(special==='wr'&&(!answered[i]||answered[i].ok))          return false;
+    if(special==='ua'&&answered[i])                             return false;
+    if(s&&!q.question.toLowerCase().includes(s)&&!q.topic.toLowerCase().includes(s)) return false;
+    return true;
+  });
+  document.getElementById('rc').textContent=`${filtered.length} question${filtered.length!==1?'s':''}`;
+  if(mode==='browse') renderBrowse();
+}
+
+function doShuffle(){filtered.sort(()=>Math.random()-.5);renderBrowse();}
+
+// ══════════════════════════════════════════════════════════
+//  BROWSE
+// ══════════════════════════════════════════════════════════
+function showBrowse(){
+  mode='browse';
+  document.getElementById('qv').classList.remove('on');
+  document.getElementById('bv').classList.remove('hide');
+  renderBrowse();
+}
+
+function renderBrowse(){
+  const el=document.getElementById('ql');
+  if(!filtered.length){
+    el.innerHTML='<div class="empty"><div class="ico">❄️</div><h3>No questions match</h3><p>Adjust your filters or search term.</p></div>';
+    return;
+  }
+  const lc=l=>l==='Easy'?'be':l==='Medium'?'bm':'bh';
+  el.innerHTML=filtered.map((qi,pos)=>{
+    const q=DB[qi],a=answered[qi],bm=bookmarks.has(qi);
+    return`<div class="qcard${a?(a.ok?' ok':' miss'):''}" onclick="startAt(${pos})">
+      <span class="qcard-num">#${qi+1}</span>
+      <div class="qcard-meta">
+        <span class="badge bsrc">${q.source}</span>
+        <span class="badge bx">${q.exam}</span>
+        <span class="badge ${lc(q.level)}">${q.level}</span>
+        <span class="badge bt">${q.topic}</span>
+        ${a?`<span class="badge ${a.ok?'bok':'bno'}">${a.ok?'✓ Correct':'✗ Wrong'}</span>`:''}
+        ${bm?`<span class="badge" style="background:var(--med-bg);border:1px solid var(--med-dim);color:var(--med)">★</span>`:''}
+      </div>
+      <div class="qcard-text">${q.question}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  QUIZ
+// ══════════════════════════════════════════════════════════
+function startQuiz(){if(!filtered.length)return;quizQ=[...filtered];qPos=0;enterQuiz();}
+function startAt(pos){quizQ=[...filtered];qPos=pos;enterQuiz();}
+function enterQuiz(){mode='quiz';document.getElementById('qv').classList.add('on');document.getElementById('bv').classList.add('hide');renderQ();}
+
+function renderQ(){
+  const qi=quizQ[qPos],q=DB[qi],a=answered[qi],tot=quizQ.length;
+  document.getElementById('qfill').style.width=((qPos+1)/tot*100)+'%';
+  document.getElementById('qcnt').textContent=`${qPos+1} / ${tot}`;
+  const lc=q.level==='Easy'?'be':q.level==='Medium'?'bm':'bh';
+  document.getElementById('qmeta').innerHTML=
+    `<span class="badge bsrc">${q.source}</span>
+     <span class="badge bx">${q.exam}</span>
+     <span class="badge ${lc}">${q.level}</span>
+     <span class="badge bt">${q.topic}</span>`;
+  document.getElementById('qidx').textContent=`Question #${qi+1} of ${DB.length}`;
+  document.getElementById('qtxt').textContent=q.question;
+  const L=['A','B','C','D','E'];
+  document.getElementById('qopts').innerHTML=q.options.map((o,i)=>{
+    let c='';if(a){if(i===q.answer)c='cor';else if(i===a.chosen)c='wrg';}
+    return`<button class="opt ${c}" onclick="pick(${i})" ${a?'disabled':''}><span class="ol">${L[i]}</span><span>${o}</span></button>`;
+  }).join('');
+  document.getElementById('qexpl').innerHTML=a?`<div class="expl"><strong>Explanation: </strong>${q.explanation}</div>`:'';
+  const bm=bookmarks.has(qi);
+  document.getElementById('bmbtn').textContent=bm?'★':'☆';
+  document.getElementById('bmbtn').classList.toggle('on',bm);
+  document.getElementById('btn-p').disabled=qPos===0;
+  const last=qPos===tot-1;
+  document.getElementById('btn-n').style.display=last?'none':'';
+  document.getElementById('btn-f').style.display=last?'':'none';
+}
+
+function pick(chosen){
+  const qi=quizQ[qPos];if(answered[qi])return;
+  answered[qi]={ok:chosen===DB[qi].answer,chosen};
+  updateStats();renderQ();
+}
+function qNext(){if(qPos<quizQ.length-1){qPos++;renderQ();}}
+function qPrev(){if(qPos>0){qPos--;renderQ();}}
+function toggleBm(){const qi=quizQ[qPos];bookmarks.has(qi)?bookmarks.delete(qi):bookmarks.add(qi);updateStats();renderQ();}
+
+function finishQuiz(){
+  const qs=quizQ.filter(i=>answered[i]);
+  const c=qs.filter(i=>answered[i].ok).length,w=qs.length-c;
+  const p=qs.length?Math.round(c/qs.length*100):0;
+  document.getElementById('m-c').textContent=c;
+  document.getElementById('m-w').textContent=w;
+  document.getElementById('m-p').textContent=p+'%';
+  const col=p>=80?'var(--easy)':p>=60?'var(--med)':'var(--hard)';
+  const r=document.getElementById('mring');r.style.stroke=col;
+  setTimeout(()=>{r.style.strokeDashoffset=289.03*(1-p/100);},50);
+  document.getElementById('m-t').textContent=p>=80?'🎉 Excellent!':p>=60?'📚 Good Effort!':'💪 Keep Going!';
+  document.getElementById('modal').classList.add('on');
+}
+function closeModal(){document.getElementById('modal').classList.remove('on');}
+function revWrong(){closeModal();special='wr';document.getElementById('qf-wr').classList.add('on');applyFilters();showBrowse();}
+
+// ══════════════════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════════════════
+function updateStats(){
+  const keys=Object.keys(answered),tot=DB.length;
+  const c=keys.filter(k=>answered[k].ok).length,w=keys.length-c;
+  const p=keys.length?Math.round(c/keys.length*100):null,acc=p!==null?p+'%':'—';
+  document.getElementById('tb-a').textContent=keys.length;
+  document.getElementById('tb-p').textContent=acc;
+  document.getElementById('sc-c').textContent=c;
+  document.getElementById('sc-w').textContent=w;
+  document.getElementById('sc-s').textContent=tot-keys.length;
+  document.getElementById('sc-a').textContent=acc;
+  const prog=tot?keys.length/tot:0;
+  document.getElementById('ring').style.strokeDashoffset=238.76*(1-prog);
+  document.getElementById('rpct').textContent=Math.round(prog*100)+'%';
+  document.getElementById('rlbl').textContent=`${keys.length} of ${tot}`;
+  document.getElementById('n-bm').textContent=bookmarks.size;
+  document.getElementById('n-wr').textContent=w;
+  document.getElementById('n-ua').textContent=tot-keys.length;
+}
+
+function doReset(){if(!confirm('Reset all progress?'))return;answered={};bookmarks=new Set();updateStats();applyFilters();}
+
+document.addEventListener('keydown',e=>{
+  if(mode!=='quiz')return;
+  if(e.key==='ArrowRight')qNext();
+  if(e.key==='ArrowLeft') qPrev();
+  if(['1','2','3','4'].includes(e.key)){const qi=quizQ[qPos];if(!answered[qi])pick(+e.key-1);}
+  if(e.key.toLowerCase()==='b')toggleBm();
+});
+</script>
+</body>
+</html>

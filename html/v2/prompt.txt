@@ -1,0 +1,42 @@
+I am preparing for SnowPro Exams. Generate a comprehensive Q&A question bank 
+as a YAML file for the following:
+  Topic: Virtual Warehouses
+  Sub-Topic: Caching
+Requirements:
+- Maximum 500  to 1000 questions
+- Cover ALL concepts within the sub-topic exhaustively
+- Mix of question types:
+    * Single correct answer (multiple choice)
+    * Multiple correct answers (select TWO / select THREE)
+    * Scenario-based (real-world business situations)
+    * Syntax/DDL/SQL query questions
+    * Tricky edge cases and common misconceptions
+- Difficulty distribution:
+    * Easy (core definitions, basic concepts)
+    * Medium (applied knowledge, calculations)
+    * Hard (architecture decisions, complex scenarios, gotchas)
+- Tag each question with relevant exams from:
+    Core |DataEngineer |DataAnalyst |Architect
+- Each question must have a detailed explanation covering:
+    * Why the correct answer is right
+    * Why each WRONG option is wrong
+Output YAML structure:
+Topic Name:
+Sub Topic Name:
+Total Question Count:
+all questions::
+  - Question No: "001"
+    question: "..."
+    their_options:
+      option A: "..."
+      option B: "..."
+      option C: "..."
+      option D: "..."
+      option E: "..."
+    correct Answer: "..."
+    explanation: >
+      ...
+    difficulty level: Easy | Medium | Hard
+    topic: "..."
+    sub topic: "..."
+    exam: Core ,DataEngineer, Architect

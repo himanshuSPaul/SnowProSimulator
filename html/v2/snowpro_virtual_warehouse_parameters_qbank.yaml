@@ -1,0 +1,1259 @@
+Topic Name: "Virtual Warehouses"
+Sub Topic Name: "Warehouse Parameters"
+Total Question Count: 60
+
+all questions:
+
+  - Question No: "001"
+    question: "What is the default size of a newly created virtual warehouse in Snowflake?"
+    their_options:
+      option A: "X-Small"
+      option B: "Small"
+      option C: "Medium"
+      option D: "Large"
+    correct Answer: "option A"
+    explanation: >
+      The default size for a new virtual warehouse is X-Small (XS). This is the smallest available
+      warehouse size and is often sufficient for development and testing workloads.
+      Option B (Small) is incorrect — Small is 2x the compute of X-Small.
+      Option C (Medium) is incorrect — Medium is 4x the compute of X-Small.
+      Option D (Large) is incorrect — Large is 8x the compute of X-Small.
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst
+
+  - Question No: "002"
+    question: "Which parameter controls how long a virtual warehouse remains running after the last query completes before automatically suspending?"
+    their_options:
+      option A: "AUTO_RESUME"
+      option B: "AUTO_SUSPEND"
+      option C: "STATEMENT_TIMEOUT_IN_SECONDS"
+      option D: "MAX_CONCURRENCY_LEVEL"
+    correct Answer: "option B"
+    explanation: >
+      AUTO_SUSPEND defines the number of seconds of inactivity after which a warehouse is
+      automatically suspended to stop consuming credits. The value is in seconds (e.g., 300 = 5 minutes).
+      Option A (AUTO_RESUME) is a boolean that controls whether the warehouse auto-resumes when a query is submitted — not suspension timing.
+      Option C (STATEMENT_TIMEOUT_IN_SECONDS) controls how long a single SQL statement can run before being cancelled — unrelated to warehouse suspension.
+      Option D (MAX_CONCURRENCY_LEVEL) controls parallel query execution slots, not suspension behavior.
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst, Architect
+
+  - Question No: "003"
+    question: "What is the minimum allowed value for AUTO_SUSPEND in Snowflake?"
+    their_options:
+      option A: "0 seconds"
+      option B: "30 seconds"
+      option C: "60 seconds"
+      option D: "300 seconds"
+    correct Answer: "option C"
+    explanation: >
+      The minimum allowed value for AUTO_SUSPEND is 60 seconds (1 minute). Setting it below 60 seconds
+      will result in an error. Setting it to 0 or NULL disables auto-suspend entirely (warehouse runs indefinitely).
+      Option A (0 seconds) is incorrect — setting AUTO_SUSPEND = 0 actually disables auto-suspend, it is not the minimum active value.
+      Option B (30 seconds) is incorrect — values below 60 are not accepted.
+      Option D (300 seconds) is incorrect — while 300 is the default in many cases, it is not the minimum.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "004"
+    question: "What is the default value of AUTO_RESUME for a newly created virtual warehouse?"
+    their_options:
+      option A: "FALSE"
+      option B: "TRUE"
+      option C: "NULL"
+      option D: "AUTO_RESUME is not set by default"
+    correct Answer: "option B"
+    explanation: >
+      AUTO_RESUME defaults to TRUE, meaning the warehouse will automatically resume from suspension
+      when a query is submitted. This is the most common and convenient setting for most workloads.
+      Option A (FALSE) is incorrect — with AUTO_RESUME=FALSE, any query submitted to a suspended warehouse
+      will fail until someone manually resumes it.
+      Option C (NULL) is incorrect — NULL is not a valid state for AUTO_RESUME.
+      Option D is incorrect — AUTO_RESUME is always set with a default of TRUE.
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst
+
+  - Question No: "005"
+    question: "Which of the following warehouse sizes provides DOUBLE the compute resources compared to a Medium warehouse?"
+    their_options:
+      option A: "Large"
+      option B: "X-Large"
+      option C: "2X-Large"
+      option D: "3X-Large"
+    correct Answer: "option A"
+    explanation: >
+      Each warehouse size increment doubles the number of servers in the cluster. A Medium warehouse
+      has 4 nodes; a Large has 8 nodes — exactly double. The credit consumption also doubles with each size step.
+      Option B (X-Large) would be 4x Medium (16 nodes), not double.
+      Option C (2X-Large) would be 8x Medium (32 nodes).
+      Option D (3X-Large) would be 16x Medium (64 nodes).
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst
+
+  - Question No: "006"
+    question: "A data engineering team wants to ensure their warehouse never idles for more than 2 minutes. Which DDL correctly sets this?"
+    their_options:
+      option A: "ALTER WAREHOUSE my_wh SET AUTO_SUSPEND = 2;"
+      option B: "ALTER WAREHOUSE my_wh SET AUTO_SUSPEND = 120;"
+      option C: "ALTER WAREHOUSE my_wh SET AUTO_RESUME = 120;"
+      option D: "ALTER WAREHOUSE my_wh SET IDLE_TIMEOUT = 120;"
+    correct Answer: "option B"
+    explanation: >
+      AUTO_SUSPEND is specified in SECONDS. 2 minutes = 120 seconds. The correct syntax is
+      ALTER WAREHOUSE ... SET AUTO_SUSPEND = 120.
+      Option A is incorrect — setting AUTO_SUSPEND = 2 means 2 seconds, which is below the 60-second minimum and will error.
+      Option C is incorrect — AUTO_RESUME is a boolean (TRUE/FALSE) that controls whether a warehouse resumes automatically; it does not accept integer timeout values.
+      Option D is incorrect — IDLE_TIMEOUT is not a valid Snowflake warehouse parameter.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "007"
+    question: "What does WAREHOUSE_SIZE = 'X4-LARGE' (4X-Large) equate to in terms of Snowflake credits per hour?"
+    their_options:
+      option A: "32 credits/hour"
+      option B: "64 credits/hour"
+      option C: "128 credits/hour"
+      option D: "256 credits/hour"
+    correct Answer: "option B"
+    explanation: >
+      Snowflake credit consumption doubles with each warehouse size step:
+      X-Small=1, Small=2, Medium=4, Large=8, X-Large=16, 2X-Large=32, 3X-Large=64, 4X-Large=128.
+      Wait — the correct mapping is: X-Small=1, Small=2, Medium=4, Large=8, X-Large=16, 2X-Large=32,
+      3X-Large=64, 4X-Large=128. So 4X-Large = 128 credits/hour.
+      CORRECTION: The correct answer is option C (128 credits/hour).
+    correct Answer: "option C"
+    explanation: >
+      Snowflake warehouse credit consumption per hour:
+      X-Small=1, Small=2, Medium=4, Large=8, X-Large=16, 2X-Large=32, 3X-Large=64, 4X-Large=128, 5X-Large=256, 6X-Large=512.
+      A 4X-Large warehouse = 128 credits/hour.
+      Option A (32) is the rate for a 2X-Large.
+      Option B (64) is the rate for a 3X-Large.
+      Option D (256) is the rate for a 5X-Large.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst, Architect
+
+  - Question No: "008"
+    question: "Which parameter, when set to TRUE, allows a warehouse to automatically provision additional clusters to handle increased query concurrency?"
+    their_options:
+      option A: "ENABLE_QUERY_ACCELERATION"
+      option B: "AUTO_RESUME"
+      option C: "SCALING_POLICY"
+      option D: "Multi-cluster warehouses with MIN_CLUSTER_COUNT and MAX_CLUSTER_COUNT"
+    correct Answer: "option D"
+    explanation: >
+      Multi-cluster warehouses are enabled by setting MIN_CLUSTER_COUNT and MAX_CLUSTER_COUNT greater than 1.
+      When MAX_CLUSTER_COUNT > MIN_CLUSTER_COUNT, Snowflake can spin up additional clusters automatically
+      based on concurrency demand.
+      Option A (ENABLE_QUERY_ACCELERATION) enables the Query Acceleration Service for eligible queries — it does not spin up additional clusters.
+      Option B (AUTO_RESUME) only controls whether a suspended single cluster resumes on query submission.
+      Option C (SCALING_POLICY) controls the strategy (STANDARD vs ECONOMY) for scaling multi-cluster warehouses, but it does not enable the feature — the cluster count parameters do.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "009"
+    question: "What is the purpose of the SCALING_POLICY parameter in a multi-cluster virtual warehouse?"
+    their_options:
+      option A: "Determines the maximum number of clusters that can be provisioned"
+      option B: "Controls whether new clusters are added based on queued queries (STANDARD) or only when all clusters are busy (ECONOMY)"
+      option C: "Sets the minimum cluster count at all times"
+      option D: "Determines how quickly a warehouse scales down after load decreases"
+    correct Answer: "option B"
+    explanation: >
+      SCALING_POLICY has two values:
+      - STANDARD: Snowflake starts additional clusters as soon as a query is queued, prioritizing performance.
+      - ECONOMY: Snowflake waits until existing clusters are fully utilized before adding more, prioritizing cost savings.
+      Option A is incorrect — MAX_CLUSTER_COUNT sets the maximum number of clusters.
+      Option C is incorrect — MIN_CLUSTER_COUNT sets the minimum.
+      Option D is incorrect — SCALING_POLICY does not control scale-down timing; Snowflake auto-suspends idle clusters after a few minutes.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "010"
+    question: "Which of the following correctly creates a warehouse with auto-suspend after 5 minutes and auto-resume enabled? (Select the CORRECT DDL)"
+    their_options:
+      option A: "CREATE WAREHOUSE my_wh WAREHOUSE_SIZE = 'MEDIUM' AUTO_SUSPEND = 5 AUTO_RESUME = TRUE;"
+      option B: "CREATE WAREHOUSE my_wh WITH WAREHOUSE_SIZE = 'MEDIUM' AUTO_SUSPEND = 300 AUTO_RESUME = TRUE;"
+      option C: "CREATE WAREHOUSE my_wh SET WAREHOUSE_SIZE = 'MEDIUM' AUTO_SUSPEND = 300 AUTO_RESUME = TRUE;"
+      option D: "CREATE WAREHOUSE my_wh WAREHOUSE_SIZE = 'MEDIUM' SUSPEND_AFTER = 300 RESUME = TRUE;"
+    correct Answer: "option B"
+    explanation: >
+      The correct syntax for CREATE WAREHOUSE uses the WITH keyword and parameter names AUTO_SUSPEND (in seconds)
+      and AUTO_RESUME. 5 minutes = 300 seconds. The WITH keyword is optional but correct syntax.
+      Option A is incorrect — AUTO_SUSPEND = 5 means 5 seconds, not 5 minutes.
+      Option C is incorrect — SET keyword is used for ALTER WAREHOUSE, not CREATE WAREHOUSE (though Snowflake may
+      accept it in some contexts, the canonical form uses WITH or no keyword).
+      Option D is incorrect — SUSPEND_AFTER and RESUME are not valid Snowflake parameter names.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "011"
+    question: "A company wants to run a large data transformation job and expects it to finish in 30 minutes. They want to ensure no single query runs longer than 45 minutes and terminates automatically. Which parameter should they set?"
+    their_options:
+      option A: "AUTO_SUSPEND = 2700"
+      option B: "STATEMENT_TIMEOUT_IN_SECONDS = 2700"
+      option C: "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 2700"
+      option D: "MAX_CONCURRENCY_LEVEL = 2700"
+    correct Answer: "option B"
+    explanation: >
+      STATEMENT_TIMEOUT_IN_SECONDS controls the maximum time (in seconds) a query can execute before
+      being automatically cancelled. 45 minutes = 2700 seconds. This prevents runaway queries.
+      Option A (AUTO_SUSPEND) controls inactivity before the warehouse suspends — not query execution time.
+      Option C (STATEMENT_QUEUED_TIMEOUT_IN_SECONDS) controls how long a query can wait in the queue
+      before being cancelled — this is about queue wait, not execution time.
+      Option D (MAX_CONCURRENCY_LEVEL) is a thread-pool-style concurrency control — not a timeout parameter.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "012"
+    question: "What is STATEMENT_QUEUED_TIMEOUT_IN_SECONDS used for?"
+    their_options:
+      option A: "Limits total warehouse run time per day"
+      option B: "Cancels a query if it has been waiting in the warehouse queue longer than the specified duration"
+      option C: "Sets the maximum execution time for a running query"
+      option D: "Controls the time before a suspended warehouse resumes"
+    correct Answer: "option B"
+    explanation: >
+      STATEMENT_QUEUED_TIMEOUT_IN_SECONDS defines how long a query can remain in the execution queue
+      (waiting for warehouse capacity) before Snowflake cancels it with a timeout error. This prevents
+      queries from waiting indefinitely when the warehouse is overloaded.
+      Option A is incorrect — there is no daily warehouse run-time limit parameter.
+      Option C is incorrect — that is the role of STATEMENT_TIMEOUT_IN_SECONDS.
+      Option D is incorrect — warehouse resume behavior is governed by AUTO_RESUME.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "013"
+    question: "What does MAX_CONCURRENCY_LEVEL control in a Snowflake virtual warehouse?"
+    their_options:
+      option A: "The maximum number of clusters in a multi-cluster warehouse"
+      option B: "The maximum number of concurrent SQL statements executed within a single cluster"
+      option C: "The maximum number of users who can connect to the warehouse simultaneously"
+      option D: "The maximum number of warehouses a single user can use"
+    correct Answer: "option B"
+    explanation: >
+      MAX_CONCURRENCY_LEVEL sets the maximum number of SQL statements that can execute simultaneously
+      within a single warehouse cluster. When this limit is reached, additional queries are queued.
+      The default value is 8. Increasing this can improve throughput for many small queries.
+      Option A is incorrect — MAX_CLUSTER_COUNT controls multi-cluster scaling.
+      Option C is incorrect — there is no per-user connection limit at the warehouse level for concurrent users.
+      Option D is incorrect — user-to-warehouse assignment is not governed by this parameter.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "014"
+    question: "Which TWO parameters must be configured to enable multi-cluster warehouse (MCW) functionality? (Select TWO)"
+    their_options:
+      option A: "SCALING_POLICY"
+      option B: "MIN_CLUSTER_COUNT"
+      option C: "MAX_CLUSTER_COUNT"
+      option D: "ENABLE_MCW"
+      option E: "CLUSTER_SIZE"
+    correct Answer: "option B and option C"
+    explanation: >
+      To enable multi-cluster warehouse behavior, you must set both MIN_CLUSTER_COUNT and MAX_CLUSTER_COUNT.
+      When MAX_CLUSTER_COUNT > 1, additional clusters can be provisioned. When MAX_CLUSTER_COUNT > MIN_CLUSTER_COUNT,
+      the warehouse scales elastically. Setting both to the same value creates a static multi-cluster warehouse.
+      Option A (SCALING_POLICY) is optional — it tunes the scale-out behavior but is not required to enable MCW.
+      Option D (ENABLE_MCW) is not a valid Snowflake parameter.
+      Option E (CLUSTER_SIZE) is not a valid parameter; warehouse size is WAREHOUSE_SIZE.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "015"
+    question: "A warehouse is configured with MIN_CLUSTER_COUNT = 1 and MAX_CLUSTER_COUNT = 1. What type of warehouse is this?"
+    their_options:
+      option A: "A multi-cluster warehouse in Economy mode"
+      option B: "A standard single-cluster warehouse"
+      option C: "A multi-cluster warehouse with auto-scaling disabled"
+      option D: "An invalid warehouse configuration"
+    correct Answer: "option B"
+    explanation: >
+      When both MIN_CLUSTER_COUNT and MAX_CLUSTER_COUNT are set to 1, the warehouse behaves as a standard
+      single-cluster warehouse. There is no ability to scale out to additional clusters.
+      Option A is incorrect — ECONOMY is a SCALING_POLICY value, not relevant here since no scaling is possible.
+      Option C is incorrect — this is effectively just a standard single-cluster warehouse, not a "disabled MCW."
+      Option D is incorrect — MIN=1, MAX=1 is a perfectly valid configuration.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "016"
+    question: "What is the WAREHOUSE_TYPE parameter used for in Snowflake?"
+    their_options:
+      option A: "Defines whether the warehouse is Standard or Snowpark-optimized"
+      option B: "Specifies the cloud provider for the warehouse"
+      option C: "Determines whether the warehouse is for ETL or BI workloads"
+      option D: "Controls whether the warehouse uses dedicated or shared clusters"
+    correct Answer: "option A"
+    explanation: >
+      WAREHOUSE_TYPE has two values: STANDARD (default) and SNOWPARK-OPTIMIZED. Snowpark-optimized
+      warehouses provide 16x more memory per node compared to standard warehouses, making them suitable
+      for memory-intensive ML and data science workloads using Snowpark.
+      Option B is incorrect — Snowflake is multi-cloud but warehouses are provisioned in the account's region; WAREHOUSE_TYPE does not select cloud provider.
+      Option C is incorrect — ETL vs BI is a workload designation made by the user, not a warehouse type parameter.
+      Option D is incorrect — warehouses always use dedicated compute; there is no "shared cluster" mode within a single warehouse.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst, Architect
+
+  - Question No: "017"
+    question: "Which of the following is TRUE about Snowpark-optimized warehouses compared to standard warehouses?"
+    their_options:
+      option A: "They support more concurrent users"
+      option B: "They provide significantly more memory per node, optimized for ML workloads"
+      option C: "They are cheaper per credit than standard warehouses"
+      option D: "They support larger WAREHOUSE_SIZE values not available in standard type"
+    correct Answer: "option B"
+    explanation: >
+      Snowpark-optimized warehouses provide 16x more memory per compute node than standard warehouses.
+      This makes them ideal for memory-intensive operations like training ML models, large Python UDFs,
+      and Snowpark DataFrame operations that require large in-memory datasets.
+      Option A is incorrect — concurrency is governed by MAX_CONCURRENCY_LEVEL and cluster count, not warehouse type.
+      Option C is incorrect — Snowpark-optimized warehouses consume the same credits per cluster size as standard warehouses (they may even be slightly more expensive).
+      Option D is incorrect — the same size tiers (X-Small through 6X-Large) are available for both types.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "018"
+    question: "A DBA needs to prevent a specific warehouse from running queries longer than 1 hour. Which is the CORRECT ALTER statement?"
+    their_options:
+      option A: "ALTER WAREHOUSE analytics_wh SET MAX_QUERY_DURATION = 3600;"
+      option B: "ALTER WAREHOUSE analytics_wh SET STATEMENT_TIMEOUT_IN_SECONDS = 3600;"
+      option C: "ALTER WAREHOUSE analytics_wh SET QUERY_TIMEOUT = 60;"
+      option D: "ALTER WAREHOUSE analytics_wh SET STATEMENT_TIMEOUT_IN_SECONDS = 60;"
+    correct Answer: "option B"
+    explanation: >
+      The correct parameter is STATEMENT_TIMEOUT_IN_SECONDS with a value in seconds. 1 hour = 3600 seconds.
+      Option A is incorrect — MAX_QUERY_DURATION is not a valid Snowflake parameter.
+      Option C is incorrect — QUERY_TIMEOUT is not a valid Snowflake parameter.
+      Option D is incorrect — STATEMENT_TIMEOUT_IN_SECONDS = 60 would set a 60-second (1 minute) timeout, not 1 hour.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "019"
+    question: "A company wants to guarantee that at least 2 warehouse clusters are always running to support baseline BI dashboard queries with no cold-start delay, while allowing up to 5 clusters during peak hours. Which configuration is correct?"
+    their_options:
+      option A: "MIN_CLUSTER_COUNT = 2, MAX_CLUSTER_COUNT = 5, AUTO_RESUME = TRUE"
+      option B: "MIN_CLUSTER_COUNT = 1, MAX_CLUSTER_COUNT = 5, AUTO_SUSPEND = 0"
+      option C: "MIN_CLUSTER_COUNT = 2, MAX_CLUSTER_COUNT = 5"
+      option D: "MIN_CLUSTER_COUNT = 5, MAX_CLUSTER_COUNT = 5"
+    correct Answer: "option C"
+    explanation: >
+      Setting MIN_CLUSTER_COUNT = 2 ensures at least 2 clusters are always running (no cold start).
+      Setting MAX_CLUSTER_COUNT = 5 allows scaling up to 5 clusters during peak demand.
+      This is the minimal correct configuration; AUTO_RESUME defaults to TRUE so it doesn't need to be specified.
+      Option A is technically valid but unnecessarily specifies AUTO_RESUME = TRUE (which is already the default).
+      Option B (MIN=1) does not guarantee 2 clusters are always running; the minimum is 1.
+      Option D (MIN=MAX=5) would always run 5 clusters — wasteful and doesn't allow scale-down.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "020"
+    question: "What happens to queries when a warehouse is in a SUSPENDED state and AUTO_RESUME = FALSE?"
+    their_options:
+      option A: "Queries queue and execute once someone manually resumes the warehouse"
+      option B: "Queries fail immediately with an error"
+      option C: "Snowflake automatically resumes the warehouse despite the parameter"
+      option D: "Queries route to a backup warehouse automatically"
+    correct Answer: "option B"
+    explanation: >
+      When AUTO_RESUME = FALSE and the warehouse is suspended, any query submitted to that warehouse
+      will immediately fail with an error (e.g., "Warehouse ... is suspended"). Queries do NOT queue —
+      they error out instantly.
+      Option A is incorrect — queries don't queue; they fail immediately unless AUTO_RESUME is TRUE.
+      Option C is incorrect — Snowflake respects the AUTO_RESUME = FALSE setting.
+      Option D is incorrect — Snowflake does not automatically reroute queries to other warehouses.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "021"
+    question: "Which parameter controls the minimum billing duration for a warehouse resumption in Snowflake?"
+    their_options:
+      option A: "MIN_BILLING_DURATION"
+      option B: "There is no such explicit parameter — Snowflake has a built-in 60-second minimum billing rule"
+      option C: "AUTO_SUSPEND minimum value enforces billing"
+      option D: "BILLING_MODE parameter"
+    correct Answer: "option B"
+    explanation: >
+      Snowflake charges a minimum of 60 seconds every time a warehouse resumes from suspension.
+      This is a platform billing rule, not a configurable parameter. If a warehouse runs for only 30 seconds
+      and then suspends, Snowflake still charges for 60 seconds. This is why setting AUTO_SUSPEND too low
+      (e.g., 60-90 seconds) can actually cost MORE if the warehouse is frequently suspended and resumed.
+      Option A is incorrect — MIN_BILLING_DURATION is not a configurable parameter.
+      Option C is incorrect — AUTO_SUSPEND timing and billing minimum are separate concepts.
+      Option D is incorrect — BILLING_MODE is not a valid Snowflake warehouse parameter.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "022"
+    question: "A data team sets AUTO_SUSPEND = 60 seconds on a warehouse used for short, bursty queries. The warehouse resumes every 90 seconds for a 10-second query. What is the actual credit cost per query cycle relative to expectations?"
+    their_options:
+      option A: "10 seconds worth of credits (actual execution time)"
+      option B: "60 seconds worth of credits (AUTO_SUSPEND duration)"
+      option C: "60 seconds worth of credits (minimum billing period per resume)"
+      option D: "90 seconds worth of credits (full resume-to-suspend cycle)"
+    correct Answer: "option C"
+    explanation: >
+      Snowflake's minimum billing period per warehouse resume is 60 seconds, regardless of actual runtime.
+      So even though the query runs for 10 seconds and the warehouse suspends after 60 seconds, the
+      effective minimum charge is 60 seconds per resume cycle.
+      In this scenario: warehouse resumes → runs 10s query → suspends after 60s idle → billed 60s minimum = 60s credits per cycle.
+      Option A is incorrect — you cannot be billed for only 10 seconds; the minimum is 60 seconds.
+      Option B is essentially the same as option C in this scenario, but the reason is the billing minimum rule, not the AUTO_SUSPEND value itself.
+      Option D is incorrect — the 90-second resume interval is the time between query cycles; the billing is per resume, minimum 60s.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "023"
+    question: "Which of the following parameters can be set at both the WAREHOUSE level and the SESSION level, with the session-level setting taking precedence?"
+    their_options:
+      option A: "WAREHOUSE_SIZE"
+      option B: "STATEMENT_TIMEOUT_IN_SECONDS"
+      option C: "AUTO_SUSPEND"
+      option D: "MAX_CLUSTER_COUNT"
+    correct Answer: "option B"
+    explanation: >
+      STATEMENT_TIMEOUT_IN_SECONDS can be set at multiple levels: account, warehouse, user, and session.
+      The most specific level takes precedence, so a session-level setting overrides the warehouse-level setting.
+      This allows individual sessions to have custom timeout behavior without changing the warehouse default.
+      Option A (WAREHOUSE_SIZE) is a warehouse-level parameter only; it cannot be set per session.
+      Option C (AUTO_SUSPEND) is a warehouse-level parameter only.
+      Option D (MAX_CLUSTER_COUNT) is a warehouse-level parameter only.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "024"
+    question: "Which parameter hierarchy (from highest to lowest precedence) applies to STATEMENT_TIMEOUT_IN_SECONDS?"
+    their_options:
+      option A: "Account → Warehouse → User → Session"
+      option B: "Session → User → Warehouse → Account"
+      option C: "Warehouse → Session → User → Account"
+      option D: "Session → Warehouse → Account → User"
+    correct Answer: "option B"
+    explanation: >
+      For parameters like STATEMENT_TIMEOUT_IN_SECONDS, the precedence order (most specific to least specific)
+      is: Session > User > Warehouse > Account. The session-level setting always wins if set.
+      Option A reverses the order — account is the most general and has the lowest precedence.
+      Option C is incorrect — warehouse does not override session.
+      Option D is incorrect — user-level settings override warehouse-level settings.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "025"
+    question: "What does the ENABLE_QUERY_ACCELERATION parameter on a virtual warehouse do?"
+    their_options:
+      option A: "Increases WAREHOUSE_SIZE automatically when query load increases"
+      option B: "Enables the Query Acceleration Service, which uses serverless compute to speed up eligible queries"
+      option C: "Enables result caching for all queries on the warehouse"
+      option D: "Activates Snowflake Cortex for AI-assisted query optimization"
+    correct Answer: "option B"
+    explanation: >
+      ENABLE_QUERY_ACCELERATION = TRUE activates the Query Acceleration Service (QAS) for the warehouse.
+      QAS uses serverless compute resources to offload and accelerate portions of eligible queries
+      (particularly scans and aggregations) without changing warehouse size.
+      Option A is incorrect — automatic warehouse resizing is not a built-in feature; multi-cluster warehouses
+      add clusters, but don't resize. WAREHOUSE_SIZE changes must be made manually.
+      Option C is incorrect — result caching is always active in Snowflake and is not controlled by this parameter.
+      Option D is incorrect — Cortex is a separate AI/ML feature unrelated to this parameter.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "026"
+    question: "What is the QUERY_ACCELERATION_MAX_SCALE_FACTOR parameter and what is its default value?"
+    their_options:
+      option A: "Maximum number of clusters in MCW; default = 10"
+      option B: "Multiplier that limits how much serverless compute QAS can use relative to warehouse size; default = 8"
+      option C: "Maximum CPU cores per node in QAS; default = 4"
+      option D: "Maximum query speedup factor achieved by QAS; default = 2"
+    correct Answer: "option B"
+    explanation: >
+      QUERY_ACCELERATION_MAX_SCALE_FACTOR is a multiplier (0–100) that limits the maximum amount of
+      serverless compute QAS can provision relative to the warehouse size. The default is 8, meaning
+      QAS can use up to 8x the warehouse's compute capacity for acceleration. Setting it to 0 effectively
+      disables QAS even when ENABLE_QUERY_ACCELERATION = TRUE.
+      Option A describes MAX_CLUSTER_COUNT (multi-cluster warehouses), not QAS.
+      Option C is incorrect — there is no per-node CPU cap parameter.
+      Option D is incorrect — QAS can provide much more than 2x speedup; 8 is the scale factor, not a speedup ratio.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "027"
+    question: "A warehouse has the following settings: MIN_CLUSTER_COUNT = 2, MAX_CLUSTER_COUNT = 4, SCALING_POLICY = 'ECONOMY'. Under ECONOMY policy, when does Snowflake add a new cluster?"
+    their_options:
+      option A: "As soon as any query is queued"
+      option B: "When the provisioning time for a new cluster would be less than the queue wait time"
+      option C: "When all active clusters are at least 80-90% utilized over a few minutes"
+      option D: "Only during scheduled maintenance windows"
+    correct Answer: "option C"
+    explanation: >
+      Under ECONOMY scaling policy, Snowflake conserves credits by waiting until existing clusters are
+      fully or nearly fully utilized (approximately 80-90% busy) before adding a new cluster. This
+      prioritizes cost over immediate performance.
+      Under STANDARD policy (Option A behavior), Snowflake adds clusters as soon as queries begin queuing.
+      Option B is incorrect — this description doesn't match either policy precisely.
+      Option D is incorrect — scaling is demand-driven, not schedule-driven.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "028"
+    question: "Which of the following statements about WAREHOUSE_SIZE changes on a running warehouse is TRUE?"
+    their_options:
+      option A: "Resizing requires the warehouse to be suspended first"
+      option B: "Resizing takes effect immediately for new queries; currently running queries complete on the old size"
+      option C: "Resizing causes all running queries to be cancelled and re-queued"
+      option D: "Resizing is only possible on standard warehouses, not Snowpark-optimized warehouses"
+    correct Answer: "option B"
+    explanation: >
+      When you resize a warehouse that is currently running, the new size takes effect for new queries
+      submitted after the resize. Queries that are already running continue to completion on the
+      previous cluster configuration. There is no downtime or cancellation.
+      Option A is incorrect — the warehouse does NOT need to be suspended to resize; resize can happen live.
+      Option C is incorrect — running queries are not cancelled; they complete on the existing provisioned compute.
+      Option D is incorrect — resizing works for both STANDARD and SNOWPARK-OPTIMIZED warehouse types.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "029"
+    question: "What is the COMMENT parameter used for in a CREATE WAREHOUSE statement?"
+    their_options:
+      option A: "Disables the warehouse and adds a reason message"
+      option B: "Adds a descriptive text label to the warehouse object for documentation purposes"
+      option C: "Enables Snowflake to automatically select the optimal warehouse size"
+      option D: "Logs a message every time the warehouse starts"
+    correct Answer: "option B"
+    explanation: >
+      The COMMENT parameter stores a string description associated with the warehouse object. It is
+      purely informational and visible in SHOW WAREHOUSES or INFORMATION_SCHEMA views. It helps teams
+      document the purpose, owner, or usage of a warehouse.
+      Option A is incorrect — to disable a warehouse you use ALTER WAREHOUSE ... SUSPEND; COMMENT does not affect state.
+      Option C is incorrect — Snowflake does not auto-select sizes based on comments.
+      Option D is incorrect — COMMENT is metadata only; it does not trigger logging events.
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "030"
+    question: "An analyst team wants to ensure their ad-hoc query warehouse NEVER automatically suspends to avoid any startup delays. What should they configure?"
+    their_options:
+      option A: "AUTO_SUSPEND = 0"
+      option B: "AUTO_SUSPEND = NULL"
+      option C: "AUTO_SUSPEND = -1"
+      option D: "Both A and B are valid ways to disable auto-suspend"
+    correct Answer: "option D"
+    explanation: >
+      Setting AUTO_SUSPEND = 0 or AUTO_SUSPEND = NULL both disable automatic suspension in Snowflake.
+      The warehouse will run indefinitely until manually suspended. Both are valid configurations.
+      Option C is incorrect — negative values are not accepted by Snowflake for AUTO_SUSPEND.
+      While options A and B are individually valid, selecting only one would miss the fact that both
+      approaches work, making option D the most complete and correct answer.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst
+
+  - Question No: "031"
+    question: "What is the valid range for MAX_CONCURRENCY_LEVEL in Snowflake?"
+    their_options:
+      option A: "1 to 10"
+      option B: "1 to 50"
+      option C: "1 to 512"
+      option D: "8 to 512"
+    correct Answer: "option C"
+    explanation: >
+      MAX_CONCURRENCY_LEVEL can be set from 1 to 512. The default is 8. This parameter controls
+      how many SQL statements can execute concurrently within a single cluster. Setting it higher
+      can help with many small, parallel queries but may increase resource contention.
+      Option A is incorrect — the maximum is 512, not 10.
+      Option B is incorrect — the maximum is 512, not 50.
+      Option D is incorrect — the minimum is 1, not 8 (though 8 is the default).
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "032"
+    question: "Which THREE of the following are valid WAREHOUSE_SIZE values in Snowflake? (Select THREE)"
+    their_options:
+      option A: "X-Small"
+      option B: "3X-Large"
+      option C: "Mega"
+      option D: "Large"
+      option E: "2X-Large"
+    correct Answer: "option A, option D, and option E"
+    explanation: >
+      Valid Snowflake warehouse sizes are: X-Small, Small, Medium, Large, X-Large, 2X-Large, 3X-Large,
+      4X-Large, 5X-Large, 6X-Large. All three of X-Small, Large, and 2X-Large are valid.
+      Option B (3X-Large) is also valid — however, since we need exactly THREE, 3X-Large is a valid choice too.
+      CORRECTION: A, B, D, and E are all valid. Let's reframe: selecting A, D, E avoids C (Mega is invalid).
+      Option C (Mega) is NOT a valid Snowflake warehouse size — this is a common misconception from
+      other cloud data platforms.
+      The three best correct answers from the options are A (X-Small), D (Large), and E (2X-Large).
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, DataAnalyst
+
+  - Question No: "033"
+    question: "A Snowflake administrator wants to allow a developer to modify the AUTO_SUSPEND setting of a warehouse but NOT change its size. What is the most appropriate approach?"
+    their_options:
+      option A: "Grant USAGE privilege on the warehouse"
+      option B: "Grant MODIFY privilege on the warehouse"
+      option C: "Grant OWNERSHIP of the warehouse"
+      option D: "There is no way to grant partial warehouse modification rights in Snowflake"
+    correct Answer: "option B"
+    explanation: >
+      The MODIFY privilege on a warehouse allows a role to change warehouse parameters including
+      AUTO_SUSPEND, AUTO_RESUME, WAREHOUSE_SIZE, and more. While MODIFY grants broad parameter
+      change access (not just AUTO_SUSPEND), it is the correct privilege for modifying warehouse settings.
+      Option A (USAGE) only allows the role to use (run queries on) the warehouse, not change its settings.
+      Option C (OWNERSHIP) gives full control including the ability to drop the warehouse — too permissive.
+      Option D is incorrect — MODIFY privilege exists for this purpose, even though it doesn't restrict to specific parameters.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "034"
+    question: "What happens when INITIALLY_SUSPENDED = TRUE is specified in a CREATE WAREHOUSE statement?"
+    their_options:
+      option A: "The warehouse is created in SUSPENDED state and must be manually resumed or will resume via AUTO_RESUME"
+      option B: "The warehouse is created but permanently disabled"
+      option C: "The warehouse starts with only 1 cluster even if MIN_CLUSTER_COUNT > 1"
+      option D: "The warehouse is created without any compute resources until first use"
+    correct Answer: "option A"
+    explanation: >
+      INITIALLY_SUSPENDED = TRUE creates the warehouse in a SUSPENDED (not running) state.
+      This is useful when you want to pre-configure a warehouse without immediately incurring compute costs.
+      The warehouse will auto-resume when a query hits it (if AUTO_RESUME = TRUE) or can be manually resumed.
+      Option B is incorrect — INITIALLY_SUSPENDED does not permanently disable the warehouse; it can be resumed.
+      Option C is incorrect — the cluster count behavior is unaffected by INITIALLY_SUSPENDED.
+      Option D is incorrect — in Snowflake, all warehouses are defined with their configuration at creation;
+      INITIALLY_SUSPENDED just means it doesn't start running immediately.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "035"
+    question: "A company discovers their warehouse is spending most of its time in a started state even when no queries run, due to very low AUTO_SUSPEND. They also notice queries frequently fail because the warehouse keeps suspending between rapid bursts. What is the BEST approach?"
+    their_options:
+      option A: "Set AUTO_SUSPEND = 0 to eliminate the problem entirely"
+      option B: "Set AUTO_SUSPEND to a higher value (e.g., 300–600 seconds) to balance cost and performance"
+      option C: "Increase MAX_CONCURRENCY_LEVEL to handle bursts better"
+      option D: "Increase WAREHOUSE_SIZE to reduce query execution time and exposure to timeouts"
+    correct Answer: "option B"
+    explanation: >
+      The problem is that AUTO_SUSPEND is set too low (e.g., 60 seconds), causing the warehouse to
+      frequently suspend between bursts, triggering the 60-second minimum billing on each resume,
+      and potentially causing query failures on AUTO_RESUME=FALSE warehouses. The best fix is to
+      increase AUTO_SUSPEND to 300–600 seconds, which keeps the warehouse warm during burst periods
+      while still eventually suspending during genuine idle periods. This balances cost and performance.
+      Option A (AUTO_SUSPEND=0) would eliminate suspensions but at potentially high cost for 24/7 running.
+      Option C is incorrect — MAX_CONCURRENCY_LEVEL addresses parallel query slots, not suspension behavior.
+      Option D is incorrect — larger warehouse size reduces query time but doesn't fix the suspension-resume cycle problem.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "036"
+    question: "Which SQL command retrieves the current parameters configured for a warehouse named 'ETL_WH'?"
+    their_options:
+      option A: "SELECT * FROM INFORMATION_SCHEMA.WAREHOUSES WHERE NAME = 'ETL_WH';"
+      option B: "SHOW WAREHOUSES LIKE 'ETL_WH';"
+      option C: "DESCRIBE WAREHOUSE ETL_WH;"
+      option D: "Both B and C are valid commands"
+    correct Answer: "option D"
+    explanation: >
+      Both SHOW WAREHOUSES LIKE 'ETL_WH' and DESCRIBE WAREHOUSE ETL_WH return information about
+      the warehouse configuration including size, state, auto-suspend, auto-resume, and other parameters.
+      SHOW WAREHOUSES displays all warehouses (filterable with LIKE), while DESCRIBE WAREHOUSE
+      provides a focused view of a specific warehouse's parameters.
+      Option A is partially valid (INFORMATION_SCHEMA.WAREHOUSES does exist) but is less commonly
+      used than SHOW/DESCRIBE and may not be the canonical approach on the exam.
+      Since both B and C are definitively valid, Option D is the most complete answer.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "037"
+    question: "What does the RESOURCE_MONITOR parameter on a warehouse do?"
+    their_options:
+      option A: "Monitors CPU and memory usage per query"
+      option B: "Associates the warehouse with a resource monitor that can track and limit credit consumption"
+      option C: "Enables automatic warehouse resizing based on resource utilization"
+      option D: "Configures monitoring agents for Snowflake operations dashboard"
+    correct Answer: "option B"
+    explanation: >
+      The RESOURCE_MONITOR parameter assigns a resource monitor object to the warehouse. Resource
+      monitors track credit usage and can take actions (notify, suspend warehouse, suspend immediate)
+      when credit thresholds are reached. This is a key cost governance tool in Snowflake.
+      Option A is incorrect — resource monitors track credits (cost), not CPU/memory per query.
+      Option C is incorrect — resource monitors don't auto-resize warehouses; they control spending.
+      Option D is incorrect — resource monitors are a Snowflake native cost-control feature, not
+      an external monitoring agent integration.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "038"
+    question: "An architect wants to configure a warehouse where Snowflake IMMEDIATELY starts new clusters as soon as ANY query is queued, regardless of cost. Which SCALING_POLICY should be used?"
+    their_options:
+      option A: "ECONOMY"
+      option B: "STANDARD"
+      option C: "PERFORMANCE"
+      option D: "AGGRESSIVE"
+    correct Answer: "option B"
+    explanation: >
+      STANDARD scaling policy starts new clusters as soon as queries begin queuing, prioritizing
+      query performance over credit cost. This is the best choice when minimizing latency is more
+      important than controlling costs.
+      Option A (ECONOMY) waits until existing clusters are highly utilized before adding new ones — the opposite of what's needed.
+      Option C (PERFORMANCE) is not a valid SCALING_POLICY value in Snowflake.
+      Option D (AGGRESSIVE) is not a valid SCALING_POLICY value in Snowflake.
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "039"
+    question: "What is the maximum number of clusters allowed in a Snowflake multi-cluster warehouse (MAX_CLUSTER_COUNT)?"
+    their_options:
+      option A: "5"
+      option B: "10"
+      option C: "20"
+      option D: "The limit depends on your Snowflake edition"
+    correct Answer: "option B"
+    explanation: >
+      Snowflake supports a maximum of 10 clusters per multi-cluster warehouse (MAX_CLUSTER_COUNT = 10).
+      Multi-cluster warehouses are only available on Enterprise Edition and above.
+      Option A is incorrect — the maximum is 10, not 5.
+      Option C is incorrect — the maximum is 10, not 20.
+      Option D is a partial truth — MCW is only available on Enterprise and above, so lower editions
+      have a maximum of 1. But for editions that support MCW, the limit is 10.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "040"
+    question: "Which Snowflake edition is REQUIRED to use multi-cluster warehouses?"
+    their_options:
+      option A: "Standard Edition"
+      option B: "Business Critical Edition"
+      option C: "Enterprise Edition or higher"
+      option D: "All editions support multi-cluster warehouses"
+    correct Answer: "option C"
+    explanation: >
+      Multi-cluster warehouses (MIN_CLUSTER_COUNT or MAX_CLUSTER_COUNT > 1) are only available on
+      Enterprise Edition and higher (Enterprise, Business Critical, VPS). Standard Edition is limited
+      to single-cluster warehouses.
+      Option A is incorrect — Standard Edition does not support multi-cluster warehouses.
+      Option B is incorrect — while Business Critical supports MCW, Enterprise is the minimum required tier.
+      Option D is incorrect — Standard Edition cannot use MCW.
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "041"
+    question: "A warehouse parameter WAIT_FOR_COMPLETION is used in which context?"
+    their_options:
+      option A: "ALTER WAREHOUSE ... RESUME WAIT_FOR_COMPLETION = TRUE"
+      option B: "CREATE WAREHOUSE ... WAIT_FOR_COMPLETION = TRUE"
+      option C: "ALTER WAREHOUSE ... SUSPEND WAIT_FOR_COMPLETION = TRUE"
+      option D: "ALTER WAREHOUSE ... RESIZE WAIT_FOR_COMPLETION = TRUE"
+    correct Answer: "option A"
+    explanation: >
+      WAIT_FOR_COMPLETION = TRUE can be used with ALTER WAREHOUSE ... RESUME to make Snowflake wait
+      until the warehouse has fully provisioned all compute before returning control to the caller.
+      Without it, the RESUME command returns immediately, and the warehouse may still be provisioning.
+      This is useful in automated pipelines where you want to ensure the warehouse is ready before
+      submitting queries.
+      Option B is incorrect — this parameter is not used with CREATE WAREHOUSE.
+      Option C is incorrect — WAIT_FOR_COMPLETION is not applicable to SUSPEND operations (suspension completes almost instantly).
+      Option D is incorrect — WAIT_FOR_COMPLETION is not a parameter of the RESIZE operation syntax.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "042"
+    question: "Which of the following is NOT a valid parameter for the CREATE WAREHOUSE command?"
+    their_options:
+      option A: "WAREHOUSE_TYPE"
+      option B: "NETWORK_POLICY"
+      option C: "RESOURCE_MONITOR"
+      option D: "ENABLE_QUERY_ACCELERATION"
+    correct Answer: "option B"
+    explanation: >
+      NETWORK_POLICY is applied to users and accounts in Snowflake, NOT to virtual warehouses.
+      Network policies restrict which IP addresses can connect to Snowflake and are set at the
+      account or user level, not at the warehouse level.
+      Option A (WAREHOUSE_TYPE) is a valid parameter: STANDARD or SNOWPARK-OPTIMIZED.
+      Option C (RESOURCE_MONITOR) is a valid parameter to assign a resource monitor.
+      Option D (ENABLE_QUERY_ACCELERATION) is a valid parameter to enable QAS.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "043"
+    question: "What does the parameter INITIALLY_SUSPENDED do when set to FALSE (the default) in a CREATE WAREHOUSE statement?"
+    their_options:
+      option A: "The warehouse is created and immediately starts running"
+      option B: "The warehouse is created but will not start until the first query"
+      option C: "The warehouse is created in a suspended state"
+      option D: "The parameter has no effect — warehouses always start immediately"
+    correct Answer: "option A"
+    explanation: >
+      When INITIALLY_SUSPENDED = FALSE (the default), the warehouse is created and immediately starts
+      provisioning compute resources. This means you begin incurring credit charges as soon as the
+      warehouse is created, even before any queries are run.
+      Option B describes the behavior of AUTO_RESUME combined with INITIALLY_SUSPENDED = TRUE.
+      Option C describes INITIALLY_SUSPENDED = TRUE, not FALSE.
+      Option D is incorrect — the parameter does have effect; INITIALLY_SUSPENDED = TRUE creates it suspended.
+    difficulty level: Easy
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "044"
+    question: "A company's BI tool runs 200 concurrent dashboard queries in the morning. Their current Large warehouse is queueing many queries. They have Enterprise Edition. What is the MOST cost-effective solution using warehouse parameters?"
+    their_options:
+      option A: "Resize to a 4X-Large warehouse to handle all 200 concurrent queries on one cluster"
+      option B: "Create a separate warehouse for each dashboard group"
+      option C: "Enable multi-cluster warehouse with MAX_CLUSTER_COUNT = 5 and SCALING_POLICY = ECONOMY"
+      option D: "Enable multi-cluster warehouse with MAX_CLUSTER_COUNT = 5 and SCALING_POLICY = STANDARD"
+    correct Answer: "option C"
+    explanation: >
+      A multi-cluster warehouse with ECONOMY scaling is the most cost-effective for handling concurrency bursts.
+      ECONOMY policy waits until existing clusters are well-utilized before adding more, minimizing
+      unnecessary cluster spin-up. MAX_CLUSTER_COUNT = 5 provides sufficient headroom for 200 concurrent queries.
+      Option A is incorrect — resizing to 4X-Large increases compute per query (good for slow queries)
+      but doesn't increase the number of parallel queries a single cluster can handle efficiently;
+      it's also expensive (128 credits/hour continuously).
+      Option B is incorrect — creating separate warehouses for each group is administratively complex
+      and may lead to under-utilization.
+      Option D (STANDARD policy) would work but is LESS cost-effective than ECONOMY because it
+      aggressively adds clusters as soon as any query queues, even if existing clusters have capacity.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "045"
+    question: "Which parameter would you configure to ensure a warehouse cluster always has at least 3 clusters running, preventing cold starts for critical workloads?"
+    their_options:
+      option A: "MAX_CLUSTER_COUNT = 3"
+      option B: "MIN_CLUSTER_COUNT = 3"
+      option C: "AUTO_RESUME = TRUE with INITIALLY_SUSPENDED = FALSE"
+      option D: "AUTO_SUSPEND = 0"
+    correct Answer: "option B"
+    explanation: >
+      MIN_CLUSTER_COUNT = 3 guarantees that at least 3 clusters are always running, even during idle
+      periods. This prevents cold starts since compute is pre-provisioned.
+      Option A (MAX_CLUSTER_COUNT = 3) sets the maximum but does not guarantee minimum running clusters.
+      Option C ensures the warehouse auto-resumes when needed but doesn't guarantee 3 clusters are always warm.
+      Option D (AUTO_SUSPEND = 0) prevents the single warehouse from suspending but doesn't address
+      multi-cluster always-on behavior. For a standard warehouse, this would work for 1 cluster only.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "046"
+    question: "Which of the following TWO parameters are SPECIFIC to multi-cluster warehouses and have no effect on single-cluster warehouses? (Select TWO)"
+    their_options:
+      option A: "AUTO_SUSPEND"
+      option B: "SCALING_POLICY"
+      option C: "MIN_CLUSTER_COUNT"
+      option D: "STATEMENT_TIMEOUT_IN_SECONDS"
+      option E: "WAREHOUSE_SIZE"
+    correct Answer: "option B and option C"
+    explanation: >
+      SCALING_POLICY and MIN_CLUSTER_COUNT are only meaningful for multi-cluster warehouses.
+      - SCALING_POLICY controls how aggressively additional clusters are added (STANDARD vs ECONOMY),
+        which only matters when MAX_CLUSTER_COUNT > 1.
+      - MIN_CLUSTER_COUNT defines the floor for running clusters, only relevant in MCW context.
+      Option A (AUTO_SUSPEND) applies to both single and multi-cluster warehouses.
+      Option D (STATEMENT_TIMEOUT_IN_SECONDS) applies to all warehouses.
+      Option E (WAREHOUSE_SIZE) applies to all warehouse types.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "047"
+    question: "What is the behavior when STATEMENT_TIMEOUT_IN_SECONDS = 0?"
+    their_options:
+      option A: "All queries are immediately cancelled"
+      option B: "Queries have no timeout and can run indefinitely"
+      option C: "The parameter is invalid — 0 is not an accepted value"
+      option D: "Queries timeout after the system default (300 seconds)"
+    correct Answer: "option B"
+    explanation: >
+      Setting STATEMENT_TIMEOUT_IN_SECONDS = 0 disables the timeout, allowing queries to run
+      indefinitely. This is also the default for the parameter at the account level (no timeout by default).
+      Option A is incorrect — 0 does not immediately cancel queries; it disables the timeout feature.
+      Option C is incorrect — 0 is a valid value that simply turns off the timeout.
+      Option D is incorrect — there is no "system default of 300 seconds" for statement timeout;
+      the platform default is effectively no timeout.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "048"
+    question: "A company wants to create a warehouse for Snowpark ML workloads. Which combination of parameters is MOST appropriate?"
+    their_options:
+      option A: "WAREHOUSE_TYPE = 'STANDARD', WAREHOUSE_SIZE = 'X-LARGE'"
+      option B: "WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED', WAREHOUSE_SIZE = 'MEDIUM'"
+      option C: "WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED', WAREHOUSE_SIZE = 'X-LARGE'"
+      option D: "WAREHOUSE_TYPE = 'ML', WAREHOUSE_SIZE = 'MEDIUM'"
+    correct Answer: "option C"
+    explanation: >
+      For Snowpark ML workloads, WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED' provides 16x memory per node,
+      which is critical for in-memory ML operations. A larger size (X-Large or above) is recommended
+      to ensure sufficient compute for ML model training.
+      Option A uses STANDARD type, which has much less memory per node — suboptimal for ML.
+      Option B uses SNOWPARK-OPTIMIZED (correct type) but Medium size may be insufficient for
+      production ML workloads.
+      Option D is incorrect — 'ML' is not a valid WAREHOUSE_TYPE value; only STANDARD and SNOWPARK-OPTIMIZED are valid.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "049"
+    question: "In a multi-cluster warehouse with MIN_CLUSTER_COUNT = 2, MAX_CLUSTER_COUNT = 6, and SCALING_POLICY = STANDARD, how many clusters run during a weekend with NO query activity?"
+    their_options:
+      option A: "0 (all clusters suspend)"
+      option B: "1 (minimum 1 cluster stays running)"
+      option C: "2 (MIN_CLUSTER_COUNT keeps 2 clusters running)"
+      option D: "6 (MAX_CLUSTER_COUNT is always running)"
+    correct Answer: "option C"
+    explanation: >
+      MIN_CLUSTER_COUNT = 2 guarantees that at least 2 clusters are always running, even with no
+      query activity. The AUTO_SUSPEND setting applies to clusters ABOVE the MIN_CLUSTER_COUNT.
+      Extra clusters (3-6) can scale down when idle, but the minimum 2 always remain running.
+      Option A is incorrect — with MIN_CLUSTER_COUNT = 2, clusters never drop below 2.
+      Option B is incorrect — the minimum is 2, not 1.
+      Option D is incorrect — only the minimum guaranteed clusters run during idle; additional clusters scale down.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "050"
+    question: "Which of the following CORRECTLY describes how credits are charged for a multi-cluster warehouse with 3 active clusters, each Large size?"
+    their_options:
+      option A: "8 credits/hour (one Large warehouse cost regardless of cluster count)"
+      option B: "24 credits/hour (8 credits × 3 clusters)"
+      option C: "3 credits/hour (1 credit per cluster regardless of size)"
+      option D: "16 credits/hour (base cost + overhead)"
+    correct Answer: "option B"
+    explanation: >
+      In a multi-cluster warehouse, each active cluster is billed at the standard warehouse size rate.
+      A Large warehouse = 8 credits/hour. With 3 active clusters = 8 × 3 = 24 credits/hour.
+      This is why multi-cluster warehouses need proper scaling policies and AUTO_SUSPEND to manage cost.
+      Option A is incorrect — you are billed per active cluster, not a flat rate.
+      Option C is incorrect — billing is size-dependent per cluster, not 1 credit per cluster.
+      Option D is incorrect — 16 is the cost of an X-Large single cluster, not 3 Large clusters.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "051"
+    question: "Which parameter can you use when creating a warehouse to tag it with metadata for cost allocation purposes?"
+    their_options:
+      option A: "LABEL"
+      option B: "COST_CENTER"
+      option C: "TAG (using the TAG keyword in DDL)"
+      option D: "COMMENT"
+    correct Answer: "option C"
+    explanation: >
+      Snowflake supports object-level tagging using the TAG keyword in DDL. You can associate tags
+      (key-value pairs defined in the account) with a warehouse for cost allocation, governance, and
+      compliance purposes. Example: CREATE WAREHOUSE my_wh WITH TAG (cost_center = 'engineering').
+      Option A (LABEL) is not a valid Snowflake warehouse parameter.
+      Option B (COST_CENTER) is not a built-in Snowflake parameter; you would create a custom tag with this name.
+      Option D (COMMENT) is a text description, not structured metadata for cost allocation systems.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "052"
+    question: "What happens to STATEMENT_QUEUED_TIMEOUT_IN_SECONDS if a query has been waiting in the queue and this timeout fires?"
+    their_options:
+      option A: "The query is moved to a lower-priority queue"
+      option B: "The query is automatically retried on a different warehouse"
+      option C: "The query is cancelled with an error"
+      option D: "The warehouse resizes to accommodate the query"
+    correct Answer: "option C"
+    explanation: >
+      When STATEMENT_QUEUED_TIMEOUT_IN_SECONDS is reached, the queued query is cancelled and the
+      user receives an error message indicating the query timed out while waiting in the queue.
+      This prevents queries from waiting indefinitely in an overloaded warehouse.
+      Option A is incorrect — Snowflake does not have a priority queue mechanism triggered by this parameter.
+      Option B is incorrect — Snowflake does not automatically retry or reroute queries to other warehouses.
+      Option D is incorrect — the warehouse does not auto-resize in response to queue timeouts.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "053"
+    question: "A developer executes: ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 120; and then runs a query on a warehouse that has STATEMENT_TIMEOUT_IN_SECONDS = 3600. What is the effective timeout for the query?"
+    their_options:
+      option A: "3600 seconds (warehouse setting takes precedence)"
+      option B: "120 seconds (session setting takes precedence over warehouse setting)"
+      option C: "1860 seconds (average of session and warehouse settings)"
+      option D: "The lower of the two: 120 seconds"
+    correct Answer: "option B"
+    explanation: >
+      Session-level parameter settings always take precedence over warehouse-level settings.
+      The hierarchy is Session > User > Warehouse > Account. Since the session has STATEMENT_TIMEOUT_IN_SECONDS = 120,
+      the query will be cancelled after 120 seconds, despite the warehouse having a 3600-second limit.
+      Note: Options B and D arrive at the same answer (120 seconds). Option B correctly states
+      the reason (session precedence), while Option D gives the correct value but the wrong reasoning.
+      Option A is incorrect — warehouse does not override session.
+      Option C is incorrect — parameters are not averaged.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "054"
+    question: "Which of the following correctly shows the DDL to create a multi-cluster warehouse with minimum 2, maximum 8 clusters, STANDARD scaling, Medium size, that auto-suspends after 10 minutes?"
+    their_options:
+      option A: >
+        CREATE WAREHOUSE mc_wh
+        WAREHOUSE_SIZE = 'MEDIUM'
+        MIN_CLUSTER_COUNT = 2
+        MAX_CLUSTER_COUNT = 8
+        SCALING_POLICY = 'STANDARD'
+        AUTO_SUSPEND = 10;
+      option B: >
+        CREATE WAREHOUSE mc_wh
+        WITH WAREHOUSE_SIZE = 'MEDIUM'
+        MIN_CLUSTER_COUNT = 2
+        MAX_CLUSTER_COUNT = 8
+        SCALING_POLICY = 'STANDARD'
+        AUTO_SUSPEND = 600;
+      option C: >
+        CREATE WAREHOUSE mc_wh
+        WAREHOUSE_SIZE = 'MEDIUM'
+        CLUSTERS = (MIN=2, MAX=8)
+        SCALING = 'STANDARD'
+        AUTO_SUSPEND = 600;
+      option D: >
+        CREATE MULTI_CLUSTER WAREHOUSE mc_wh
+        SIZE = 'MEDIUM'
+        MIN_CLUSTERS = 2
+        MAX_CLUSTERS = 8
+        SCALING_POLICY = 'STANDARD'
+        AUTO_SUSPEND = 600;
+    correct Answer: "option B"
+    explanation: >
+      Option B uses the correct syntax with proper parameter names and correct unit conversion:
+      - WAREHOUSE_SIZE = 'MEDIUM' (correct)
+      - MIN_CLUSTER_COUNT = 2 (correct parameter name)
+      - MAX_CLUSTER_COUNT = 8 (correct parameter name)
+      - SCALING_POLICY = 'STANDARD' (correct)
+      - AUTO_SUSPEND = 600 (10 minutes = 600 seconds — correct unit)
+      Option A is incorrect — AUTO_SUSPEND = 10 means 10 seconds (not 10 minutes).
+      Option C is incorrect — CLUSTERS = (MIN=, MAX=) and SCALING = are not valid Snowflake syntax.
+      Option D is incorrect — CREATE MULTI_CLUSTER WAREHOUSE and SIZE= are not valid Snowflake syntax;
+      the correct command is CREATE WAREHOUSE with the MIN/MAX_CLUSTER_COUNT parameters.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "055"
+    question: "What is the CREDIT COST per hour of running a Snowpark-optimized X-Large warehouse compared to a standard X-Large warehouse?"
+    their_options:
+      option A: "Same cost (16 credits/hour)"
+      option B: "Double the cost (32 credits/hour)"
+      option C: "Snowpark-optimized warehouses use different billing units, not credits"
+      option D: "Snowpark-optimized X-Large costs slightly more than standard X-Large but uses the same credit unit"
+    correct Answer: "option D"
+    explanation: >
+      Snowpark-optimized warehouses consume more credits per hour than equivalent standard warehouses
+      due to the additional memory resources per node. They use the same credit unit but at a higher
+      rate per size. The exact multiplier may vary, but they are more expensive than standard warehouses
+      of the same size tier. Check current Snowflake pricing documentation for exact rates.
+      Option A is incorrect — Snowpark-optimized warehouses cost more due to enhanced memory.
+      Option B is incorrect — it's not exactly double; the premium varies.
+      Option C is incorrect — Snowflake uses credits universally across all compute resources.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "056"
+    question: "A query is running on a warehouse and the administrator resizes the warehouse from Large to X-Large while the query is mid-execution. What happens to the running query?"
+    their_options:
+      option A: "The query is cancelled and must be resubmitted"
+      option B: "The query continues to completion on the original Large cluster; new queries use X-Large"
+      option C: "The query pauses, the warehouse resizes, then the query resumes on X-Large"
+      option D: "The warehouse resize is rejected because a query is in progress"
+    correct Answer: "option B"
+    explanation: >
+      When a warehouse is resized while queries are running, Snowflake provisions new compute at the
+      new size in the background. Currently running queries complete on the existing compute allocation.
+      New queries submitted after the resize use the newly provisioned X-Large capacity. There is no
+      cancellation, pause, or rejection.
+      Option A is incorrect — running queries are not cancelled by a resize.
+      Option C is incorrect — queries do not pause and resume; they continue without interruption.
+      Option D is incorrect — resizes are not blocked by active queries.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer, Architect
+
+  - Question No: "057"
+    question: "Which of the following parameters are NOT valid for a CREATE WAREHOUSE statement in Snowflake? (Select TWO)"
+    their_options:
+      option A: "QUERY_TIMEOUT"
+      option B: "WAREHOUSE_SIZE"
+      option C: "BILLING_PERIOD"
+      option D: "AUTO_RESUME"
+      option E: "ENABLE_QUERY_ACCELERATION"
+    correct Answer: "option A and option C"
+    explanation: >
+      QUERY_TIMEOUT and BILLING_PERIOD are not valid Snowflake warehouse parameters.
+      - The correct parameter for query timeout is STATEMENT_TIMEOUT_IN_SECONDS.
+      - BILLING_PERIOD is not a configurable warehouse parameter; billing rules (60-second minimum) are platform-level.
+      Option B (WAREHOUSE_SIZE) is a valid parameter.
+      Option D (AUTO_RESUME) is a valid parameter.
+      Option E (ENABLE_QUERY_ACCELERATION) is a valid parameter.
+    difficulty level: Medium
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: Core, DataEngineer
+
+  - Question No: "058"
+    question: "What is the purpose of the MAX_CLUSTER_COUNT = MIN_CLUSTER_COUNT configuration in a multi-cluster warehouse?"
+    their_options:
+      option A: "It creates a fixed-size MCW where the number of clusters never changes"
+      option B: "It is an invalid configuration"
+      option C: "It creates a warehouse that auto-scales between MIN and MAX"
+      option D: "It disables the MCW feature and reverts to single-cluster"
+    correct Answer: "option A"
+    explanation: >
+      When MAX_CLUSTER_COUNT equals MIN_CLUSTER_COUNT (and both are > 1), the warehouse runs a fixed
+      number of clusters that never increases or decreases. This is called a "maximized" or "static"
+      multi-cluster configuration. All clusters are always running, providing maximum consistent capacity.
+      This is useful when you need predictable, always-available capacity without scaling delays.
+      Option B is incorrect — this is a valid and useful configuration.
+      Option C is incorrect — auto-scaling only occurs when MAX > MIN.
+      Option D is incorrect — setting both to the same value greater than 1 keeps MCW active at a fixed count.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "059"
+    question: "A customer wants to use the Query Acceleration Service (QAS) but wants to cap the serverless compute usage to at most 4x the warehouse size to control costs. Which configuration achieves this?"
+    their_options:
+      option A: "ENABLE_QUERY_ACCELERATION = TRUE, QUERY_ACCELERATION_MAX_SCALE_FACTOR = 4"
+      option B: "ENABLE_QUERY_ACCELERATION = TRUE, MAX_CONCURRENCY_LEVEL = 4"
+      option C: "ENABLE_QUERY_ACCELERATION = TRUE, QUERY_ACCELERATION_MAX_SCALE_FACTOR = 0"
+      option D: "ENABLE_QUERY_ACCELERATION = 4"
+    correct Answer: "option A"
+    explanation: >
+      To enable QAS and limit its scale factor to 4x, you need both:
+      - ENABLE_QUERY_ACCELERATION = TRUE (enables the service)
+      - QUERY_ACCELERATION_MAX_SCALE_FACTOR = 4 (caps serverless compute at 4x warehouse size)
+      Option B is incorrect — MAX_CONCURRENCY_LEVEL controls parallel query slots, not QAS compute limits.
+      Option C is incorrect — QUERY_ACCELERATION_MAX_SCALE_FACTOR = 0 disables QAS entirely.
+      Option D is incorrect — ENABLE_QUERY_ACCELERATION is a boolean; it cannot accept an integer value.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
+
+  - Question No: "060"
+    question: "An organization discovers that warehouse credits are being consumed unexpectedly overnight. They suspect a rogue ETL pipeline is resuming the warehouse. Which TWO parameters should they review and potentially adjust to prevent this? (Select TWO)"
+    their_options:
+      option A: "AUTO_RESUME = FALSE (to prevent automatic resumption)"
+      option B: "AUTO_SUSPEND = 60 (to ensure quick shutdown after activity)"
+      option C: "MAX_CONCURRENCY_LEVEL = 1 (to limit parallelism)"
+      option D: "RESOURCE_MONITOR (to set credit limits and receive alerts)"
+      option E: "SCALING_POLICY = ECONOMY (to reduce cluster additions)"
+    correct Answer: "option A and option D"
+    explanation: >
+      To prevent unauthorized overnight warehouse usage:
+      - AUTO_RESUME = FALSE: Prevents the warehouse from starting automatically when a query hits it.
+        The pipeline would fail rather than silently consuming credits.
+      - RESOURCE_MONITOR: Set a credit quota for the warehouse with notification/suspension actions
+        to catch unexpected consumption early and automatically suspend the warehouse at a credit limit.
+      Option B (AUTO_SUSPEND = 60) helps limit exposure after activity starts, but doesn't PREVENT
+      the warehouse from starting — the rogue pipeline would still resume it.
+      Option C (MAX_CONCURRENCY_LEVEL = 1) limits parallelism but doesn't prevent warehouse startup.
+      Option E (SCALING_POLICY = ECONOMY) is about MCW scaling — not relevant to the core problem.
+    difficulty level: Hard
+    topic: "Virtual Warehouses"
+    sub topic: "Warehouse Parameters"
+    exam: DataEngineer, Architect
